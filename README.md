@@ -367,7 +367,8 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 | GET    | `/admin/{externalId}`       | Detalle completo de orden (admin)    | `ROLE_ADMIN` o `ROLE_EMPLOYEE`   |
 | GET    | `/{externalId}`             | Ver orden propia por ID              | `ORDER_READ`                     |
 | GET    | `/user/{userExternalId}`    | Órdenes de un usuario                | `ORDER_READ_BY_USER`             |
-| POST   | `/{externalId}/cancel`      | Cancelar orden                       | `ORDER_CANCEL_OWN`               |
+| POST   | `/{externalId}/cancel`      | Cancelar orden propia                | `ORDER_CANCEL_OWN`               |
+| POST   | `/{externalId}/admin-cancel`| Cancelar cualquier orden (admin)     | `ORDER_CANCEL_ANY`               |
 
 ### Direcciones (`/api/addresses`)
 
@@ -473,12 +474,24 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 | Añada válida | Entre 1900 y el año actual + 1 |
 | Graduación alcohólica | Entre 0 y 100 |
 | Vino único | No se repite el mismo nombre + añada + bodega |
+| Un pago por orden | Una orden con pago registrado rechaza un segundo intento |
+| Stock con lock optimista | `@Version` en `WineVariantEntity` detecta escrituras concurrentes |
 
 ---
 
 ## Manejo de Errores
 
-La API devuelve respuestas de error estructuradas:
+La API devuelve un JSON uniforme para todos los errores:
+
+```json
+{
+  "timestamp": "2026-10-21T19:30:00",
+  "status": 409,
+  "error": "Conflict",
+  "message": "Stock cannot be negative",
+  "path": "/api/wine-variants/stock/adjustment"
+}
+```
 
 | Código HTTP | Excepción                    | Situación                              |
 |-------------|-----------------------------|----------------------------------------|
@@ -490,7 +503,20 @@ La API devuelve respuestas de error estructuradas:
 | 409         | `EmailAlreadyExistsException` | Email duplicado al registrar        |
 | 409         | `StockInsufficientException` | Stock insuficiente para la compra    |
 
-Las validaciones de campos (`@Valid`) devuelven un mapa de errores con los campos y mensajes correspondientes.
+Las validaciones de campos (`@Valid`) agregan un objeto `fieldErrors` con el campo y su mensaje:
+
+```json
+{
+  "timestamp": "2026-10-21T19:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/api/wines",
+  "fieldErrors": {
+    "vintage": "Vintage must be 1900 or later"
+  }
+}
+```
 
 ---
 
@@ -518,6 +544,8 @@ src/main/java/com/utn/vinoteca/
     ├── address/                 # Direcciones
     ├── wine/                 # Vinos
     ├── wineVariant/          # Formatos + stock
+    ├── pricing/                 # Precio único (oferta, mayorista, minorista)
+    ├── stock/                   # Descuento, reposición y ajustes de stock
     ├── stockMovement/           # Movimientos de stock
     ├── wineType/                # Tipos de vino
     ├── grapeVariety/            # Varietales

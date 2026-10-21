@@ -40,6 +40,8 @@ jwt:
 
 server:
   port: 8081
+  error:
+    include-stacktrace: never
 
 springdoc:
   swagger-ui:

@@ -49,7 +49,7 @@ public class WineVariantEntity {
     private Integer wholesaleMinQty;
 
     @Version
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     private Long version;
 
     @ManyToOne(fetch = FetchType.LAZY)

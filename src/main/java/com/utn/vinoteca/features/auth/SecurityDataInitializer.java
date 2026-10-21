@@ -1,6 +1,7 @@
 package com.utn.vinoteca.features.auth;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +10,7 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityDataInitializer {
     private final PermitRepository permitRepository;
     private final RolesRepository roleRepository;
@@ -158,17 +160,12 @@ public class SecurityDataInitializer {
                     )
             );
 
-            System.out.println("Cantidad de permisos: "
-                    + permitRepository.count());
+            log.info("Permissions seeded: {}", permitRepository.count());
 
-            System.out.println("Roles existentes: "
-                    + roleRepository.count());
+            log.info("Roles seeded: {}", roleRepository.count());
 
             roleRepository.findByRole(Roles.ROLE_ADMIN)
-                    .ifPresent(r -> System.out.println(
-                            "Permisos ADMIN: "
-                                    + r.getPermits().size()
-                    ));
+                    .ifPresent(r -> log.info("ADMIN permissions: {}", r.getPermits().size()));
         };
     }
 

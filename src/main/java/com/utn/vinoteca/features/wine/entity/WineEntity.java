@@ -10,6 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,8 +54,9 @@ public class WineEntity {
     @Column(name = "active", nullable = false)
     private boolean active;
 
+    @Builder.Default
     @OneToMany(mappedBy = "wine", fetch = FetchType.LAZY)
-    private List<WineVariantEntity> wineVariants;
+    private List<WineVariantEntity> wineVariants = new ArrayList<>();
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)

@@ -64,7 +64,7 @@ public class OfferController {
     public ResponseEntity<OfferResponseDTO> addProduct(
             @Parameter(description = "ID externo de la oferta") @PathVariable UUID offerExternalId,
             @RequestBody @Valid OfferProductRequestDTO dto) {
-        return ResponseEntity.ok(offerService.addProductToOffer(dto));
+        return ResponseEntity.ok(offerService.addProductToOffer(offerExternalId, dto));
     }
 
     @DeleteMapping("/{offerExternalId}/products/{wineVariantExternalId}")

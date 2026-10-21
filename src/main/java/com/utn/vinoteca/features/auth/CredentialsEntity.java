@@ -3,6 +3,7 @@ package com.utn.vinoteca.features.auth;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Slf4j
 
 @Entity
 public class CredentialsEntity implements UserDetails {
@@ -51,14 +53,9 @@ public class CredentialsEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
-        System.out.println("ROLES: " + roles);
-
         Set<GrantedAuthority> authorities = new HashSet<>();
 
         roles.forEach(role -> {
-
-            System.out.println("ROL: " + role.getRole());
-            System.out.println("PERMISOS: " + role.getPermits());
 
             authorities.add(
                     new SimpleGrantedAuthority(
@@ -75,7 +72,7 @@ public class CredentialsEntity implements UserDetails {
             );
         });
 
-        System.out.println("AUTHORITIES FINALES: " + authorities);
+        log.debug("Authorities for {}: {}", getUsername(), authorities);
 
         return authorities;
     }

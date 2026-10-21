@@ -131,7 +131,7 @@ public class WineService implements IWineService {
         WineEntity wine = wineRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wine not found. ID: ", externalId));
 
-        if (!wine.isActive()) {
+        if (wine.isActive()) {
             throw new BusinessRuleException("Wine is already active.");
         }
 

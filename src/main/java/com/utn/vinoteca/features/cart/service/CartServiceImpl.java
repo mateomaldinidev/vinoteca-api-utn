@@ -186,6 +186,7 @@ public class CartServiceImpl implements ICartService {
 
     private CartResponseDTO mapCartToResponseDTO(CartEntity cart) {
         CartResponseDTO responseDTO = modelMapper.map(cart, CartResponseDTO.class);
+        responseDTO.setUserExternalId(cart.getUser().getExternalId());
 
         List<CartItemResponseDTO> itemDTOs = cart.getCartItems().stream()
                 .map(cartItemEntity -> {
