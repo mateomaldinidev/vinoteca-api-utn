@@ -70,7 +70,7 @@ public class WineController {
     @PutMapping("/{externalId}")
     @Operation(summary = "Actualizar vino", description = "Actualiza los datos de un vino existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Vino actualizado",
+            @ApiResponse(responseCode = "200", description = "Vino actualizado",
                     content = @Content(schema = @Schema(implementation = WineResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos"),
             @ApiResponse(responseCode = "401", description = "No autenticado"),
@@ -82,7 +82,7 @@ public class WineController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del vino a actualizar")
             @RequestBody WineRequestDTO wineRequestDTO) {
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .ok()
                 .body(wineService.update(externalId, wineRequestDTO)
         );
     }

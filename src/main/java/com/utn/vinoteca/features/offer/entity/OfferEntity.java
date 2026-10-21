@@ -7,6 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,8 +44,9 @@ public class OfferEntity {
     @Column(name="active",nullable = false)
     private Boolean active;
 
+    @Builder.Default
     @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OfferProductEntity> offerProducts;
+    private List<OfferProductEntity> offerProducts = new ArrayList<>();
 
 
 }

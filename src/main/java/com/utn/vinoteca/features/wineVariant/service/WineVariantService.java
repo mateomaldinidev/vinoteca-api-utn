@@ -11,10 +11,8 @@ import com.utn.vinoteca.features.wineVariant.mapper.WineVariantMapper;
 import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.wineVariant.specification.WineVariantSpecification;
 import com.utn.vinoteca.features.stockMovement.dto.StockMovementRequestDTO;
-import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
-import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
-import com.utn.vinoteca.features.stockMovement.repository.StockMovementRepository;
-import jakarta.transaction.Transactional;
+import com.utn.vinoteca.features.stock.service.StockService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -30,7 +28,7 @@ public class WineVariantService implements IWineVariantService {
 
     private final WineVariantRepository wineVariantRepository;
     private final WineRepository wineRepository;
-    private final StockMovementRepository stockMovementRepository;
+    private final StockService stockService;
 
     private final WineVariantMapper wineVariantMapper;
 
@@ -171,16 +169,7 @@ public class WineVariantService implements IWineVariantService {
     public WineVariantResponseDTO registerEntry(StockMovementRequestDTO dto) {
         WineVariantEntity variant = getActiveVariant(dto.getVariantId());
 
-        variant.setStock(variant.getStock() + dto.getQuantity());
-
-        wineVariantRepository.save(variant);
-
-        createStockMovement(
-                variant,
-                dto.getQuantity(),
-                StockMovementType.ENTRY,
-                dto.getReason()
-        );
+        stockService.registerEntry(variant, dto.getQuantity(), dto.getReason());
 
         return wineVariantMapper.toResponse(variant);
     }
@@ -191,21 +180,7 @@ public class WineVariantService implements IWineVariantService {
     public WineVariantResponseDTO adjustStock(StockMovementRequestDTO dto) {
         WineVariantEntity variant = getActiveVariant(dto.getVariantId());
 
-        int newStock = variant.getStock() + dto.getQuantity();
-
-        if (newStock < 0) {
-            throw new BusinessRuleException("Stock cannot be negative");
-        }
-        variant.setStock(newStock);
-
-        wineVariantRepository.save(variant);
-
-        createStockMovement(
-                variant,
-                dto.getQuantity(),
-                StockMovementType.ADJUSTMENT,
-                dto.getReason()
-        );
+        stockService.adjust(variant, dto.getQuantity(), dto.getReason());
 
         return wineVariantMapper.toResponse(variant);
     }
@@ -224,19 +199,6 @@ public class WineVariantService implements IWineVariantService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Wine variant not found with ID:", variantId)
                 );
-    }
-
-    //metodo interno para crear un registro de movimiento de stock
-    private void createStockMovement(WineVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
     }
 
     private void validateWholesaleConfig(WineVariantRequestDTO dto) {

@@ -90,6 +90,31 @@ public class OrderController {
                 .build();
     }
 
+    @PostMapping("/{externalId}/admin-cancel")
+    @PreAuthorize("hasAuthority('ORDER_CANCEL_ANY')")
+    @Operation(summary = "Cancelar orden (Admin)", description = "Cancela cualquier orden. Solo admin y empleado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Orden cancelada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Orden no encontrada"),
+            @ApiResponse(responseCode = "409", description = "La orden no se puede cancelar",
+                    content = @Content)
+    })
+    public ResponseEntity<Void> cancelOrderAsAdmin(
+            @Parameter(description = "ID externo de la orden") @PathVariable UUID externalId,
+            @Parameter(description = "ID externo del usuario que cancela") @RequestParam UUID userExternalId
+    ) {
+
+        orderService.cancelOrder(externalId, userExternalId);
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
     @GetMapping("/user/{userExternalId}")
     @PreAuthorize("hasAuthority('ORDER_READ_BY_USER')")
     @Operation(summary = "Obtener ordenes de un usuario", description = "Retorna todas las ordenes de un usuario especifico")

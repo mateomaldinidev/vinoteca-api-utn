@@ -1,5 +1,6 @@
 package com.utn.vinoteca.features.offer.service;
 
+import com.utn.vinoteca.exception.BadRequestException;
 import com.utn.vinoteca.exception.BusinessRuleException;
 import com.utn.vinoteca.exception.ResourceNotFoundException;
 import com.utn.vinoteca.features.auth.Roles;
@@ -65,15 +66,19 @@ public class OfferService implements IOfferService {
     // Agregar un vino a una oferta activa, validando que no esté repetido y que el precio con descuento sea menor al original
     @Override
     @Transactional
-    public OfferResponseDTO addProductToOffer(OfferProductRequestDTO dto) {
-        OfferEntity offer = offerRepository.findByExternalIdAndActiveTrue(dto.getOfferId())
-                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: ", dto.getOfferId()));
+    public OfferResponseDTO addProductToOffer(UUID offerExternalId, OfferProductRequestDTO dto) {
+        if (dto.getOfferId() != null && !dto.getOfferId().equals(offerExternalId)) {
+            throw new BadRequestException("offerId in the body does not match the path");
+        }
+
+        OfferEntity offer = offerRepository.findByExternalIdAndActiveTrue(offerExternalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: ", offerExternalId));
 
         WineVariantEntity variant = wineVariantRepository.findByExternalIdAndActiveTrue(dto.getWineVariantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Wine variant not found with ID: ", dto.getWineVariantId()));
 
         if (offerProductRepository.existsByOfferExternalIdAndWineVariantExternalId(
-                dto.getOfferId(), dto.getWineVariantId())) {
+                offerExternalId, dto.getWineVariantId())) {
             throw new BusinessRuleException("Wine variant is already associated with this offer");
         }
 
@@ -83,6 +88,7 @@ public class OfferService implements IOfferService {
 
         OfferProductEntity offerProduct = offerProductMapper.toEntity(dto, offer, variant);
         offerProductRepository.save(offerProduct);
+        offer.getOfferProducts().add(offerProduct);
 
         return offerMapper.toResponse(offer);
     }

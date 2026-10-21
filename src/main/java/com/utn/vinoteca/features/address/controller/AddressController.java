@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/addresses")
+@RequestMapping("/api/addresses")
 @RequiredArgsConstructor
 @Tag(name = "Addresses", description = "Endpoints para la gestion de direcciones")
 public class AddressController {

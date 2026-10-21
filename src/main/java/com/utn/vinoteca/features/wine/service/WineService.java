@@ -19,7 +19,7 @@ import com.utn.vinoteca.features.wineVariant.dto.DisabledVariantDTO;
 import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.distributor.entity.DistributorEntity;
 import com.utn.vinoteca.features.distributor.repository.DistributorRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -131,7 +131,7 @@ public class WineService implements IWineService {
         WineEntity wine = wineRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wine not found. ID: ", externalId));
 
-        if (!wine.isActive()) {
+        if (wine.isActive()) {
             throw new BusinessRuleException("Wine is already active.");
         }
 

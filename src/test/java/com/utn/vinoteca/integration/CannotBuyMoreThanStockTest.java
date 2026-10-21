@@ -32,8 +32,7 @@ class CannotBuyMoreThanStockTest extends AbstractIntegrationTest {
         wineVariantRepository.save(variant);
 
         assertThatThrownBy(() -> checkout(user))
-                .isInstanceOf(com.utn.vinoteca.exception.BusinessRuleException.class)
-                .hasMessageContaining("Insufficient stock");
+                .isInstanceOf(com.utn.vinoteca.exception.StockInsufficientException.class);
 
         assertThat(variant.getStock()).isEqualTo(3);
     }

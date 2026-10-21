@@ -11,10 +11,10 @@ import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
 import com.utn.vinoteca.features.cart_item.dto.CartItemResponseDTO;
 import com.utn.vinoteca.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
-import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository;
+import com.utn.vinoteca.features.pricing.service.PricingService;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
-import com.utn.vinoteca.features.order.service.OrderService;
+import com.utn.vinoteca.features.order.service.ICheckoutService;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.user.entity.UserEntity;
@@ -39,8 +39,8 @@ public class CartServiceImpl implements ICartService {
     private final UserRepository userRepository;
     private final WineVariantRepository wineVariantRepository;
     private final ModelMapper modelMapper;
-    private final OrderService orderService;
-    private final OfferProductRepository offerProductRepository;
+    private final ICheckoutService checkoutService;
+    private final PricingService pricingService;
 
     @Transactional
     public CartResponseDTO createOrUpdateCart(CartRequestDTO cartRequest) {
@@ -186,6 +186,7 @@ public class CartServiceImpl implements ICartService {
 
     private CartResponseDTO mapCartToResponseDTO(CartEntity cart) {
         CartResponseDTO responseDTO = modelMapper.map(cart, CartResponseDTO.class);
+        responseDTO.setUserExternalId(cart.getUser().getExternalId());
 
         List<CartItemResponseDTO> itemDTOs = cart.getCartItems().stream()
                 .map(cartItemEntity -> {
@@ -194,7 +195,7 @@ public class CartServiceImpl implements ICartService {
                     itemResponseDTO.setVariantAttribute(cartItemEntity.getWineVariant().getAttribute());
 
                     WineVariantEntity wineVariant = cartItemEntity.getWineVariant();
-                    BigDecimal unitPrice = calculateUnitPrice(
+                    BigDecimal unitPrice = pricingService.calculateUnitPrice(
                             wineVariant,
                             cartItemEntity.getQuantity());
 
@@ -225,27 +226,6 @@ public class CartServiceImpl implements ICartService {
 
         return user;
     }
-
-    private BigDecimal calculateUnitPrice(WineVariantEntity variant, Integer quantity) {
-
-        BigDecimal offerPrice = offerProductRepository
-                .findActiveOfferForVariant(variant.getExternalId())
-                .map(op -> op.getDiscountedPrice())
-                .orElse(null);
-
-        if (offerPrice != null) {
-            return offerPrice;
-        }
-
-        if (variant.getWholesaleMinQty() != null
-                && variant.getWholesalePrice() != null
-                && quantity >= variant.getWholesaleMinQty()) {
-            return variant.getWholesalePrice();
-        }
-
-        return variant.getPrice();
-    }
-
     public CartEntity getCartEntityByUserId(UUID userExternalId) {
         UserEntity user = getActiveUser(userExternalId);
 
@@ -262,7 +242,7 @@ public class CartServiceImpl implements ICartService {
             throw new BusinessRuleException("Cart is empty");
         }
 
-        OrderResponseDTO order = orderService.createFromCart(cart, addressId, deliveryType);
+        OrderResponseDTO order = checkoutService.createFromCart(cart, addressId, deliveryType);
 
         cart.getCartItems().clear();
         cartRepository.save(cart);

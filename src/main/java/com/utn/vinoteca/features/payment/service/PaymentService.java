@@ -7,19 +7,18 @@ import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.entity.OrderEntity;
 import com.utn.vinoteca.features.order.enums.OrderStatus;
 import com.utn.vinoteca.features.order.mapper.OrderMapper;
+import com.utn.vinoteca.features.order.policy.OrderStatusPolicy;
 import com.utn.vinoteca.features.order.repository.OrderRepository;
 import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
 import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
 import com.utn.vinoteca.features.payment.dto.PaymentResponseDTO;
 import com.utn.vinoteca.features.payment.entity.PaymentEntity;
 import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.gateway.PaymentGatewayRegistry;
 import com.utn.vinoteca.features.payment.mapper.PaymentMapper;
 import com.utn.vinoteca.features.payment.repository.PaymentRepository;
+import com.utn.vinoteca.features.stock.service.StockService;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
-import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
-import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
-import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
-import com.utn.vinoteca.features.stockMovement.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,12 +33,12 @@ public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final WineVariantRepository wineVariantRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
-    private final StockMovementRepository stockMovementRepository;
-    private final CardPaymentSimulator cardPaymentSimulator;
+    private final StockService stockService;
+    private final PaymentGatewayRegistry paymentGatewayRegistry;
+    private final OrderStatusPolicy orderStatusPolicy;
 
     @Override
     public PaymentResponseDTO pay(PaymentRequestDTO request) {
@@ -47,12 +46,14 @@ public class PaymentService implements IPaymentService {
         OrderEntity order = orderRepository.findByExternalId(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found wit ID: ", request.getOrderId()));
 
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new BusinessRuleException("Order is not pending payment");
-        }
+        orderStatusPolicy.assertCanPay(order.getStatus());
 
         if (request.getAmount().compareTo(order.getTotal()) != 0) {
             throw new BusinessRuleException("Invalid payment amount");
+        }
+
+        if (paymentRepository.findByOrder_ExternalId(order.getExternalId()).isPresent()) {
+            throw new BusinessRuleException("Order already has a payment");
         }
 
         // Crear payment en estado PENDING
@@ -67,7 +68,7 @@ public class PaymentService implements IPaymentService {
         payment = paymentRepository.save(payment);
 
         // Simular pago
-        PaymentStatus result = cardPaymentSimulator.simulate(request);
+        PaymentStatus result = paymentGatewayRegistry.forMethod(request.getPaymentMethod()).charge(request);
 
         // CASO APPROVED
         if (result == PaymentStatus.APPROVED) {
@@ -91,6 +92,7 @@ public class PaymentService implements IPaymentService {
         }
 
         // CASO REJECTED → rollback stock + cancelar orden
+        orderStatusPolicy.assertCanCancel(order.getStatus());
         payment.setPaymentStatus(PaymentStatus.REJECTED);
         order.setStatus(OrderStatus.CANCELLED);
 
@@ -111,38 +113,14 @@ public class PaymentService implements IPaymentService {
         return paymentMapper.toDTO(payment);
     }
 
-    // STOCK ROLLBACK
     private void restoreStock(OrderEntity order) {
-
         for (OrderItemEntity item : order.getItems()) {
-
-            WineVariantEntity variant = item.getWineVariant();
-
-            variant.setStock(
-                    variant.getStock() + item.getQuantity()
-            );
-
-            wineVariantRepository.save(variant);
-
-            createStockMovement(
-                    variant,
+            stockService.restore(
+                    item.getWineVariant(),
                     item.getQuantity(),
-                    StockMovementType.CANCELLATION,
                     "Stock restored by payment rejection"
             );
         }
-    }
-
-    private void createStockMovement(WineVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
     }
 
 
