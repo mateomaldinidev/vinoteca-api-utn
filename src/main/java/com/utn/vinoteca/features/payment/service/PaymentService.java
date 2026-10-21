@@ -7,6 +7,7 @@ import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.entity.OrderEntity;
 import com.utn.vinoteca.features.order.enums.OrderStatus;
 import com.utn.vinoteca.features.order.mapper.OrderMapper;
+import com.utn.vinoteca.features.order.policy.OrderStatusPolicy;
 import com.utn.vinoteca.features.order.repository.OrderRepository;
 import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
 import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
@@ -36,6 +37,7 @@ public class PaymentService implements IPaymentService {
     private final IEmailService emailService;
     private final StockService stockService;
     private final CardPaymentSimulator cardPaymentSimulator;
+    private final OrderStatusPolicy orderStatusPolicy;
 
     @Override
     public PaymentResponseDTO pay(PaymentRequestDTO request) {
@@ -43,9 +45,7 @@ public class PaymentService implements IPaymentService {
         OrderEntity order = orderRepository.findByExternalId(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found wit ID: ", request.getOrderId()));
 
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new BusinessRuleException("Order is not pending payment");
-        }
+        orderStatusPolicy.assertCanPay(order.getStatus());
 
         if (request.getAmount().compareTo(order.getTotal()) != 0) {
             throw new BusinessRuleException("Invalid payment amount");
@@ -91,6 +91,7 @@ public class PaymentService implements IPaymentService {
         }
 
         // CASO REJECTED → rollback stock + cancelar orden
+        orderStatusPolicy.assertCanCancel(order.getStatus());
         payment.setPaymentStatus(PaymentStatus.REJECTED);
         order.setStatus(OrderStatus.CANCELLED);
 

@@ -14,7 +14,7 @@ import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
 import com.utn.vinoteca.features.pricing.service.PricingService;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
-import com.utn.vinoteca.features.order.service.OrderService;
+import com.utn.vinoteca.features.order.service.ICheckoutService;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.user.entity.UserEntity;
@@ -39,7 +39,7 @@ public class CartServiceImpl implements ICartService {
     private final UserRepository userRepository;
     private final WineVariantRepository wineVariantRepository;
     private final ModelMapper modelMapper;
-    private final OrderService orderService;
+    private final ICheckoutService checkoutService;
     private final PricingService pricingService;
 
     @Transactional
@@ -241,7 +241,7 @@ public class CartServiceImpl implements ICartService {
             throw new BusinessRuleException("Cart is empty");
         }
 
-        OrderResponseDTO order = orderService.createFromCart(cart, addressId, deliveryType);
+        OrderResponseDTO order = checkoutService.createFromCart(cart, addressId, deliveryType);
 
         cart.getCartItems().clear();
         cartRepository.save(cart);
