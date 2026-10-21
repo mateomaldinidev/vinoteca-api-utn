@@ -1,12 +1,12 @@
 spring:
   application:
-    name: corralon
+    name: vinoteca
 
   datasource:
     # Los valores por defecto (:localhost, :3306, etc.) se usan solo
     # si se corre la app local con mvn spring-boot:run.
     # Con Docker, las variables se inyectan desde compose.yaml.
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:corralon_db}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:vinoteca_db}
     username: ${DB_USER:user}
     password: ${DB_PASSWORD:password}
 

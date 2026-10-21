@@ -1,12 +1,12 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: corralon-mysql
+    container_name: vinoteca-mysql
     ports:
       - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${DB_NAME:-corralon_db}
+      MYSQL_DATABASE: ${DB_NAME:-vinoteca_db}
       MYSQL_USER: ${DB_USER:-user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-password}
     # Verifica que MySQL esté listo antes de arrancar la app
@@ -18,26 +18,26 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - corralon-network
+      - vinoteca-network
 
   mailhog:
     image: mailhog/mailhog
-    container_name: corralon-mailhog
+    container_name: vinoteca-mailhog
     ports:
       - "1025:1025"
       - "8025:8025"
     networks:
-      - corralon-network
+      - vinoteca-network
 
   app:
     build: .
-    container_name: corralon-app
+    container_name: vinoteca-app
     ports:
       - "8080:8081"
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: ${DB_NAME:-corralon_db}
+      DB_NAME: ${DB_NAME:-vinoteca_db}
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-password}
       MAIL_HOST: mailhog
@@ -52,11 +52,11 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - corralon-network
+      - vinoteca-network
 
 volumes:
   mysql_data:
 
 networks:
-  corralon-network:
+  vinoteca-network:
     driver: bridge
