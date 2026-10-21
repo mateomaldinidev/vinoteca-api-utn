@@ -3,8 +3,8 @@ package com.utn.vinoteca.features.offer.mapper;
 import com.utn.vinoteca.features.offer.dto.OfferRequestDTO;
 import com.utn.vinoteca.features.offer.dto.OfferResponseDTO;
 import com.utn.vinoteca.features.offer.entity.OfferEntity;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductResponseDTO;
-import com.utn.vinoteca.features.offer_product.mapper.OfferProductMapper;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductResponseDTO;
+import com.utn.vinoteca.features.offerProduct.mapper.OfferProductMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 

@@ -1,5 +1,8 @@
 package com.utn.vinoteca.features.payment.entity;
 
+import com.utn.vinoteca.features.payment.enums.PaymentMethod;
+import com.utn.vinoteca.features.payment.enums.PaymentStatus;
+
 
 import com.utn.vinoteca.features.order.entity.OrderEntity;
 import jakarta.persistence.*;

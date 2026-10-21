@@ -1,8 +1,8 @@
 package com.utn.vinoteca.features.payment.gateway;
 
 import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
-import com.utn.vinoteca.features.payment.entity.PaymentMethod;
-import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.enums.PaymentMethod;
+import com.utn.vinoteca.features.payment.enums.PaymentStatus;
 
 public interface PaymentGateway {
 

@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.cart.entity;
 
 
-import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
+import com.utn.vinoteca.features.cartItem.entity.CartItemEntity;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;

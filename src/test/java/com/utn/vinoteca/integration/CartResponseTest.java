@@ -2,7 +2,7 @@ package com.utn.vinoteca.integration;
 
 import com.utn.vinoteca.features.cart.dto.CartRequestDTO;
 import com.utn.vinoteca.features.cart.dto.CartResponseDTO;
-import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemRequestDTO;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.support.AbstractIntegrationTest;

@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.offer.entity;
 
-import com.utn.vinoteca.features.offer_product.entity.OfferProductEntity;
+import com.utn.vinoteca.features.offerProduct.entity.OfferProductEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;

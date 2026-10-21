@@ -3,7 +3,7 @@ package com.utn.vinoteca.features.offer.controller;
 import com.utn.vinoteca.features.offer.dto.OfferRequestDTO;
 import com.utn.vinoteca.features.offer.dto.OfferResponseDTO;
 import com.utn.vinoteca.features.offer.service.IOfferService;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductRequestDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

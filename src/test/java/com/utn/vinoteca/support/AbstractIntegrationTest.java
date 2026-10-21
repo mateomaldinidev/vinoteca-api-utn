@@ -1,14 +1,14 @@
 package com.utn.vinoteca.support;
 
-import com.utn.vinoteca.features.auth.CredentialsEntity;
-import com.utn.vinoteca.features.auth.CredentialsRepository;
-import com.utn.vinoteca.features.auth.RoleEntity;
-import com.utn.vinoteca.features.auth.Roles;
-import com.utn.vinoteca.features.auth.RolesRepository;
+import com.utn.vinoteca.security.entity.CredentialsEntity;
+import com.utn.vinoteca.security.repository.CredentialsRepository;
+import com.utn.vinoteca.security.entity.RoleEntity;
+import com.utn.vinoteca.security.enums.Roles;
+import com.utn.vinoteca.security.repository.RolesRepository;
 import com.utn.vinoteca.features.cart.dto.CartRequestDTO;
 import com.utn.vinoteca.features.cart.repository.CartRepository;
 import com.utn.vinoteca.features.cart.service.ICartService;
-import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemRequestDTO;
 import com.utn.vinoteca.features.distributor.entity.DistributorEntity;
 import com.utn.vinoteca.features.distributor.repository.DistributorRepository;
 import com.utn.vinoteca.features.notifications.service.IEmailService;

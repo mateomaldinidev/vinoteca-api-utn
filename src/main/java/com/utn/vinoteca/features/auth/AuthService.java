@@ -1,5 +1,7 @@
 package com.utn.vinoteca.features.auth;
 
+import com.utn.vinoteca.security.repository.CredentialsRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

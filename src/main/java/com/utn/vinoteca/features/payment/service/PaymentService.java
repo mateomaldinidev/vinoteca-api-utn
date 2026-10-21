@@ -13,7 +13,7 @@ import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
 import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
 import com.utn.vinoteca.features.payment.dto.PaymentResponseDTO;
 import com.utn.vinoteca.features.payment.entity.PaymentEntity;
-import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.enums.PaymentStatus;
 import com.utn.vinoteca.features.payment.gateway.PaymentGatewayRegistry;
 import com.utn.vinoteca.features.payment.mapper.PaymentMapper;
 import com.utn.vinoteca.features.payment.repository.PaymentRepository;

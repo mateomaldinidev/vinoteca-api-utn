@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.notifications.service;
 
 import com.utn.vinoteca.features.offer.dto.OfferResponseDTO;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductResponseDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductResponseDTO;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.orderItem.dto.OrderItemResponseDTO;
 import lombok.RequiredArgsConstructor;

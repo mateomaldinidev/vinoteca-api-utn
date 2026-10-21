@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.pricing.service;
 
-import com.utn.vinoteca.features.offer_product.entity.OfferProductEntity;
-import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository;
+import com.utn.vinoteca.features.offerProduct.entity.OfferProductEntity;
+import com.utn.vinoteca.features.offerProduct.repository.OfferProductRepository;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

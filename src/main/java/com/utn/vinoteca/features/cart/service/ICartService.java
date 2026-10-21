@@ -3,7 +3,7 @@ package com.utn.vinoteca.features.cart.service;
 import com.utn.vinoteca.features.cart.dto.CartRequestDTO;
 import com.utn.vinoteca.features.cart.dto.CartResponseDTO;
 import com.utn.vinoteca.features.cart.entity.CartEntity;
-import com.utn.vinoteca.features.cart_item.dto.CartItemQuantityUpdateDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemQuantityUpdateDTO;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
 
