@@ -8,6 +8,9 @@ import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.enums.DeliveryType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,7 +36,16 @@ public class CartController {
     @PostMapping
     @PreAuthorize("hasAuthority('CART_CREATE_OR_UPDATE')")
     @Operation(summary = "Crear o actualizar carrito", description = "Crea un nuevo carrito o actualiza uno existente")
-    @ApiResponse(responseCode = "200", description = "Carrito creado o actualizado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Carrito creado o actualizado",
+                    content = @Content(schema = @Schema(implementation = CartResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<CartResponseDTO> createOrUpdateCart(@Valid @RequestBody CartRequestDTO cartRequest) {
 
         return ResponseEntity.ok( cartService.createOrUpdateCart(cartRequest));
@@ -43,7 +55,12 @@ public class CartController {
     @PreAuthorize("hasAuthority('CART_READ')")
     @Operation(summary = "Obtener carrito de usuario", description = "Retorna el carrito de un usuario especifico")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Carrito encontrado"),
+            @ApiResponse(responseCode = "200", description = "Carrito encontrado",
+                    content = @Content(schema = @Schema(implementation = CartResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Carrito no encontrado")
     })
     public ResponseEntity<CartResponseDTO> getCartByUserId(
@@ -54,7 +71,17 @@ public class CartController {
     @PatchMapping("/{userId}/items/{productVariantId}")
     @PreAuthorize("hasAuthority('CART_UPDATE_ITEM_QUANTITY')")
     @Operation(summary = "Actualizar cantidad de item", description = "Actualiza la cantidad de un producto en el carrito")
-    @ApiResponse(responseCode = "200", description = "Cantidad actualizada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cantidad actualizada",
+                    content = @Content(schema = @Schema(implementation = CartResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Carrito o item no encontrado")
+    })
     public ResponseEntity<CartResponseDTO> updateCartItemQuantity(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId,
             @Parameter(description = "ID externo de la variante de producto") @PathVariable UUID productVariantId,
@@ -65,7 +92,14 @@ public class CartController {
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('CART_CLEAR')")
     @Operation(summary = "Vaciar carrito", description = "Elimina todos los items del carrito de un usuario")
-    @ApiResponse(responseCode = "204", description = "Carrito vaciado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Carrito vaciado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Carrito no encontrado")
+    })
     public ResponseEntity<Void> clearCart(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId) {
         cartService.clearCart(userId);
@@ -76,8 +110,14 @@ public class CartController {
     @PreAuthorize("hasAuthority('CART_CHECKOUT')")
     @Operation(summary = "Finalizar compra", description = "Convierte el carrito en una orden")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Orden creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Error en el checkout")
+            @ApiResponse(responseCode = "201", description = "Orden creada exitosamente",
+                    content = @Content(schema = @Schema(implementation = OrderResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error en el checkout",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
     })
     public ResponseEntity<OrderResponseDTO> checkout(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId,

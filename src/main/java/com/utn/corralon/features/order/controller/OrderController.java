@@ -6,6 +6,9 @@ import com.utn.corralon.features.order.dto.OrderSummaryDTO;
 import com.utn.corralon.features.order.service.IOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +32,14 @@ public class OrderController {
     @GetMapping("/admin")
     @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
     @Operation(summary = "Listar todas las ordenes (Admin)", description = "Retorna todas las ordenes del sistema. Solo admin y empleado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ordenes encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OrderAdminResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<OrderAdminResponseDTO>> getAll() {
 
         return ResponseEntity
@@ -40,7 +51,12 @@ public class OrderController {
     @PreAuthorize("hasAuthority('ORDER_READ')")
     @Operation(summary = "Obtener orden por ID", description = "Retorna una orden por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Orden encontrada"),
+            @ApiResponse(responseCode = "200", description = "Orden encontrada",
+                    content = @Content(schema = @Schema(implementation = OrderResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Orden no encontrada")
     })
     public ResponseEntity<OrderResponseDTO> getByExternalId(
@@ -56,6 +72,10 @@ public class OrderController {
     @Operation(summary = "Cancelar orden", description = "Cancela una orden existente")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Orden cancelada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Orden no encontrada")
     })
     public ResponseEntity<Void> cancelOrder(
@@ -73,6 +93,14 @@ public class OrderController {
     @GetMapping("/user/{userExternalId}")
     @PreAuthorize("hasAuthority('ORDER_READ_BY_USER')")
     @Operation(summary = "Obtener ordenes de un usuario", description = "Retorna todas las ordenes de un usuario especifico")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ordenes encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OrderSummaryDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<OrderSummaryDTO>> getOrdersByUser(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userExternalId) {
 
@@ -83,7 +111,12 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
     @Operation(summary = "Obtener orden detalle (Admin)", description = "Retorna el detalle completo de una orden. Solo admin y empleado.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Orden encontrada"),
+            @ApiResponse(responseCode = "200", description = "Orden encontrada",
+                    content = @Content(schema = @Schema(implementation = OrderAdminResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Orden no encontrada")
     })
     public ResponseEntity<OrderAdminResponseDTO> getAdminOrder(

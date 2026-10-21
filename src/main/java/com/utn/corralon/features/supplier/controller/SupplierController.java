@@ -5,6 +5,9 @@ import com.utn.corralon.features.supplier.dto.SupplierResponseDTO;
 import com.utn.corralon.features.supplier.service.ISupplierService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,16 @@ public class SupplierController {
     @PostMapping
     @PreAuthorize("hasAuthority('SUPPLIER_CREATE')")
     @Operation(summary = "Crear proveedor", description = "Crea un nuevo proveedor")
-    @ApiResponse(responseCode = "201", description = "Proveedor creado exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Proveedor creado exitosamente",
+                    content = @Content(schema = @Schema(implementation = SupplierResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<SupplierResponseDTO> create(@RequestBody @Valid SupplierRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(supplierService.create(dto));
     }
@@ -37,6 +49,14 @@ public class SupplierController {
     @GetMapping
     @PreAuthorize("hasAuthority('SUPPLIER_LIST')")
     @Operation(summary = "Listar proveedores activos", description = "Retorna todos los proveedores activos")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Proveedores encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SupplierResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<SupplierResponseDTO>> getAll() {
         return ResponseEntity.ok(supplierService.getAll());
     }
@@ -45,7 +65,12 @@ public class SupplierController {
     @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     @Operation(summary = "Obtener proveedor por ID", description = "Retorna un proveedor activo por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedor encontrado"),
+            @ApiResponse(responseCode = "200", description = "Proveedor encontrado",
+                    content = @Content(schema = @Schema(implementation = SupplierResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
     })
     public ResponseEntity<SupplierResponseDTO> getByExternalId(
@@ -57,7 +82,14 @@ public class SupplierController {
     @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
     @Operation(summary = "Actualizar proveedor", description = "Actualiza los datos de un proveedor existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedor actualizado"),
+            @ApiResponse(responseCode = "200", description = "Proveedor actualizado",
+                    content = @Content(schema = @Schema(implementation = SupplierResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
     })
     public ResponseEntity<SupplierResponseDTO> update(
@@ -71,6 +103,10 @@ public class SupplierController {
     @Operation(summary = "Eliminar proveedor", description = "Eliminacion logica de un proveedor")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Proveedor eliminado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
     })
     public ResponseEntity<Void> delete(
@@ -82,7 +118,14 @@ public class SupplierController {
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('SUPPLIER_ACTIVATE')")
     @Operation(summary = "Activar proveedor", description = "Activa un proveedor previamente desactivado")
-    @ApiResponse(responseCode = "204", description = "Proveedor activado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Proveedor activado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+    })
     public ResponseEntity<Void> activate(
             @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
         supplierService.activate(externalId);
@@ -92,6 +135,14 @@ public class SupplierController {
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('SUPPLIER_LIST_INACTIVE')")
     @Operation(summary = "Listar proveedores inactivos", description = "Retorna todos los proveedores inactivos")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Proveedores inactivos encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SupplierResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<SupplierResponseDTO>> getInactive() {
         return ResponseEntity.ok(supplierService.getInactive());
     }

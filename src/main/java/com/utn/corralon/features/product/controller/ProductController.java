@@ -7,6 +7,9 @@ import com.utn.corralon.features.product.dto.ProductResponseDTO;
 import com.utn.corralon.features.product.service.IProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +34,10 @@ public class ProductController {
     @GetMapping("/{externalId}")
     @Operation(summary = "Obtener producto por ID", description = "Retorna un producto activo por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto encontrado"),
+            @ApiResponse(responseCode = "200", description = "Producto encontrado",
+                    content = @Content(schema = @Schema(implementation = ProductResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     public ResponseEntity<ProductResponseDTO> getById(
@@ -44,9 +50,16 @@ public class ProductController {
     @PreAuthorize("hasAuthority('PRODUCT_CREATE')")
     @PostMapping
     @Operation(summary = "Crear producto", description = "Crea un nuevo producto en el sistema")
-    @ApiResponse(responseCode = "201", description = "Producto creado exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Producto creado exitosamente",
+                    content = @Content(schema = @Schema(implementation = ProductResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado")
+    })
     public ResponseEntity<ProductResponseDTO> create(
             @Valid
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del producto a crear")
             @RequestBody ProductRequestDTO productRequestDTO) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -57,11 +70,16 @@ public class ProductController {
     @PutMapping("/{externalId}")
     @Operation(summary = "Actualizar producto", description = "Actualiza los datos de un producto existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Producto actualizado"),
+            @ApiResponse(responseCode = "201", description = "Producto actualizado",
+                    content = @Content(schema = @Schema(implementation = ProductResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     public ResponseEntity<ProductResponseDTO> update(
             @Parameter(description = "ID externo del producto") @PathVariable UUID externalId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos del producto a actualizar")
             @RequestBody ProductRequestDTO productRequestDTO) {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -73,7 +91,10 @@ public class ProductController {
     @DeleteMapping("/{externalId}")
     @Operation(summary = "Eliminar producto", description = "Eliminacion logica de un producto")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto eliminado"),
+            @ApiResponse(responseCode = "200", description = "Producto eliminado",
+                    content = @Content(schema = @Schema(implementation = ProductDeleteResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado"),
             @ApiResponse(responseCode = "404", description = "Producto no encontrado")
     })
     public ResponseEntity<ProductDeleteResponseDTO> delete(
@@ -86,7 +107,12 @@ public class ProductController {
     @PreAuthorize("hasAuthority('PRODUCT_ACTIVATE')")
     @PatchMapping("/{externalId}/activate")
     @Operation(summary = "Activar producto", description = "Activa un producto previamente desactivado")
-    @ApiResponse(responseCode = "204", description = "Producto activado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Producto activado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
     public ResponseEntity<Void> activate(
             @Parameter(description = "ID externo del producto") @PathVariable UUID externalId) {
         productService.activate(externalId);
@@ -98,6 +124,12 @@ public class ProductController {
     @PreAuthorize("hasAuthority('PRODUCT_LIST')")
     @GetMapping("/search")
     @Operation(summary = "Buscar productos activos", description = "Busca productos activos con filtros opcionales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Productos encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado")
+    })
     public ResponseEntity<List<ProductResponseDTO>> search(
             @Parameter(description = "Nombre del producto") @RequestParam(required = false) String name,
             @Parameter(description = "ID del proveedor") @RequestParam(required = false) UUID supplierId,
@@ -112,6 +144,12 @@ public class ProductController {
     @PreAuthorize("hasAuthority('PRODUCT_LIST_INACTIVE')")
     @GetMapping("/inactive")
     @Operation(summary = "Buscar productos inactivos", description = "Busca productos inactivos con filtros opcionales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Productos inactivos encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado"),
+            @ApiResponse(responseCode = "403", description = "No autorizado")
+    })
     public ResponseEntity<List<ProductResponseDTO>> getInactive(
             @Parameter(description = "Nombre del producto") @RequestParam(required = false) String name,
             @Parameter(description = "ID del proveedor") @RequestParam(required = false) UUID supplierId,

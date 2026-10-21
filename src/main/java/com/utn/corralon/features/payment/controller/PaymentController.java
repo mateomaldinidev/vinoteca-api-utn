@@ -5,6 +5,8 @@ import com.utn.corralon.features.payment.dto.PaymentResponseDTO;
 import com.utn.corralon.features.payment.service.IPaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +30,14 @@ public class PaymentController {
     @PreAuthorize("hasAuthority('PAYMENT_CREATE')")
     @Operation(summary = "Procesar pago", description = "Procesa el pago de una orden")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Pago procesado exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Error al procesar el pago")
+            @ApiResponse(responseCode = "200", description = "Pago procesado exitosamente",
+                    content = @Content(schema = @Schema(implementation = PaymentResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al procesar el pago",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
     })
     public ResponseEntity<PaymentResponseDTO> pay(
             @Valid @RequestBody PaymentRequestDTO request
@@ -44,7 +52,12 @@ public class PaymentController {
     @PreAuthorize("hasAuthority('PAYMENT_READ')")
     @Operation(summary = "Obtener pago por orden", description = "Retorna el pago asociado a una orden")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Pago encontrado"),
+            @ApiResponse(responseCode = "200", description = "Pago encontrado",
+                    content = @Content(schema = @Schema(implementation = PaymentResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Pago no encontrado")
     })
     public ResponseEntity<PaymentResponseDTO> getByOrder(

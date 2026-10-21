@@ -4,6 +4,9 @@ import com.utn.corralon.features.stockMovement.dto.StockMovementResponseDTO;
 import com.utn.corralon.features.stockMovement.service.IStockMovementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +29,14 @@ public class StockMovementController {
     @GetMapping("/variant/{variantId}")
     @PreAuthorize("hasAuthority('STOCK_MOVEMENT_LIST_BY_VARIANT')")
     @Operation(summary = "Obtener movimientos por variante", description = "Retorna todos los movimientos de stock de una variante de producto")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Movimientos encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = StockMovementResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<StockMovementResponseDTO>> getMovementsByVariant(
             @Parameter(description = "ID externo de la variante de producto") @PathVariable UUID variantId) {
         return ResponseEntity.ok(stockMovementService.getMovementsByVariant(variantId));
@@ -35,7 +46,12 @@ public class StockMovementController {
     @PreAuthorize("hasAuthority('STOCK_MOVEMENT_READ')")
     @Operation(summary = "Obtener movimiento por ID", description = "Retorna un movimiento de stock por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Movimiento encontrado"),
+            @ApiResponse(responseCode = "200", description = "Movimiento encontrado",
+                    content = @Content(schema = @Schema(implementation = StockMovementResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Movimiento no encontrado")
     })
     public ResponseEntity<StockMovementResponseDTO> getMovementById(

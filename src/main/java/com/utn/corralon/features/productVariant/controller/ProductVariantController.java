@@ -6,6 +6,9 @@ import com.utn.corralon.features.productVariant.service.IProductVariantService;
 import com.utn.corralon.features.stockMovement.dto.StockMovementRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,7 +36,12 @@ public class ProductVariantController {
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_READ')")
     @Operation(summary = "Obtener variante por ID", description = "Retorna una variante de producto por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Variante encontrada"),
+            @ApiResponse(responseCode = "200", description = "Variante encontrada",
+                    content = @Content(schema = @Schema(implementation = ProductVariantResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Variante no encontrada")
     })
     public ResponseEntity<ProductVariantResponseDTO> getById(
@@ -47,7 +55,16 @@ public class ProductVariantController {
     @PostMapping
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_CREATE')")
     @Operation(summary = "Crear variante", description = "Crea una nueva variante de producto")
-    @ApiResponse(responseCode = "201", description = "Variante creada exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Variante creada exitosamente",
+                    content = @Content(schema = @Schema(implementation = ProductVariantResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<ProductVariantResponseDTO> create(
             @Valid
             @RequestBody ProductVariantRequestDTO productVariantRequestDTO)
@@ -61,7 +78,14 @@ public class ProductVariantController {
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_UPDATE')")
     @Operation(summary = "Actualizar variante", description = "Actualiza los datos de una variante existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Variante actualizada"),
+            @ApiResponse(responseCode = "200", description = "Variante actualizada",
+                    content = @Content(schema = @Schema(implementation = ProductVariantResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Variante no encontrada")
     })
     public ResponseEntity<ProductVariantResponseDTO> update(
@@ -81,6 +105,10 @@ public class ProductVariantController {
     @Operation(summary = "Eliminar variante", description = "Eliminacion logica de una variante de producto")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Variante eliminada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Variante no encontrada")
     })
     public ResponseEntity<Void> delete(
@@ -96,7 +124,14 @@ public class ProductVariantController {
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_ACTIVATE')")
     @Operation(summary = "Activar variante", description = "Activa una variante previamente desactivada")
-    @ApiResponse(responseCode = "204", description = "Variante activada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Variante activada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Variante no encontrada")
+    })
     public ResponseEntity<Void> activate(
             @Parameter(description = "ID externo de la variante") @PathVariable UUID externalId)
     {
@@ -110,6 +145,14 @@ public class ProductVariantController {
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_LIST')")
     @Operation(summary = "Buscar variantes activas", description = "Busca variantes activas con filtros opcionales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Variantes encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductVariantResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<ProductVariantResponseDTO>> search(
             @Parameter(description = "Atributo de la variante") @RequestParam(required = false) String attribute,
             @Parameter(description = "Precio minimo") @RequestParam(required = false) BigDecimal minPrice,
@@ -137,6 +180,14 @@ public class ProductVariantController {
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('PRODUCT_VARIANT_LIST_INACTIVE')")
     @Operation(summary = "Buscar variantes inactivas", description = "Busca variantes inactivas con filtros opcionales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Variantes inactivas encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductVariantResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<ProductVariantResponseDTO>> getInactive(
             @Parameter(description = "Atributo de la variante") @RequestParam(required = false) String attribute,
             @Parameter(description = "Precio minimo") @RequestParam(required = false) BigDecimal minPrice,
@@ -164,7 +215,16 @@ public class ProductVariantController {
     @PostMapping("/stock/entry")
     @PreAuthorize("hasAuthority('STOCK_ENTRY')")
     @Operation(summary = "Registrar entrada de stock", description = "Registra una entrada de stock para una variante")
-    @ApiResponse(responseCode = "200", description = "Entrada de stock registrada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Entrada de stock registrada",
+                    content = @Content(schema = @Schema(implementation = ProductVariantResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<ProductVariantResponseDTO> registerEntry(
             @RequestBody StockMovementRequestDTO dto)
     {
@@ -176,7 +236,16 @@ public class ProductVariantController {
     @PostMapping("/stock/adjustment")
     @PreAuthorize("hasAuthority('STOCK_ADJUSTMENT')")
     @Operation(summary = "Ajustar stock", description = "Realiza un ajuste de stock para una variante")
-    @ApiResponse(responseCode = "200", description = "Stock ajustado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Stock ajustado",
+                    content = @Content(schema = @Schema(implementation = ProductVariantResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<ProductVariantResponseDTO> adjustStock(
             @RequestBody StockMovementRequestDTO dto)
     {
@@ -189,7 +258,12 @@ public class ProductVariantController {
     @PreAuthorize("hasAuthority('STOCK_READ')")
     @Operation(summary = "Obtener stock disponible", description = "Retorna el stock disponible de una variante")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Stock obtenido"),
+            @ApiResponse(responseCode = "200", description = "Stock obtenido",
+                    content = @Content(schema = @Schema(implementation = Integer.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Variante no encontrada")
     })
     public ResponseEntity<Integer> getAvailableStock(

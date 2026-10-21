@@ -6,6 +6,9 @@ import com.utn.corralon.features.offer.service.IOfferService;
 import com.utn.corralon.features.offer_product.dto.OfferProductRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +33,16 @@ public class OfferController {
     @PostMapping
     @PreAuthorize("hasAuthority('OFFER_CREATE')")
     @Operation(summary = "Crear oferta", description = "Crea una nueva oferta")
-    @ApiResponse(responseCode = "201", description = "Oferta creada exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Oferta creada exitosamente",
+                    content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<OfferResponseDTO> create(@RequestBody @Valid OfferRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(offerService.create(dto));
     }
@@ -39,7 +51,14 @@ public class OfferController {
     @PreAuthorize("hasAuthority('OFFER_ADD_PRODUCT')")
     @Operation(summary = "Agregar producto a oferta", description = "Agrega un producto a una oferta existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto agregado"),
+            @ApiResponse(responseCode = "200", description = "Producto agregado",
+                    content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Oferta no encontrada")
     })
     public ResponseEntity<OfferResponseDTO> addProduct(
@@ -52,7 +71,12 @@ public class OfferController {
     @PreAuthorize("hasAuthority('OFFER_REMOVE_PRODUCT')")
     @Operation(summary = "Remover producto de oferta", description = "Elimina un producto de una oferta existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto removido"),
+            @ApiResponse(responseCode = "200", description = "Producto removido",
+                    content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Oferta o producto no encontrado")
     })
     public ResponseEntity<OfferResponseDTO> removeProduct(
@@ -65,7 +89,12 @@ public class OfferController {
     @PreAuthorize("hasAuthority('OFFER_READ')")
     @Operation(summary = "Obtener oferta por ID", description = "Retorna una oferta por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Oferta encontrada"),
+            @ApiResponse(responseCode = "200", description = "Oferta encontrada",
+                    content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Oferta no encontrada")
     })
     public ResponseEntity<OfferResponseDTO> getByExternalId(
@@ -76,6 +105,14 @@ public class OfferController {
     @GetMapping
     @PreAuthorize("hasAuthority('OFFER_LIST')")
     @Operation(summary = "Listar ofertas activas", description = "Retorna todas las ofertas activas")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ofertas encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OfferResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<OfferResponseDTO>> getAllActive() {
         return ResponseEntity.ok(offerService.getAllActive());
     }
@@ -83,6 +120,14 @@ public class OfferController {
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('OFFER_LIST_INACTIVE')")
     @Operation(summary = "Listar ofertas inactivas", description = "Retorna todas las ofertas inactivas")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ofertas inactivas encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = OfferResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<OfferResponseDTO>> getAllInactive() {
         return ResponseEntity.ok(offerService.getAllInactive());
     }
@@ -90,7 +135,14 @@ public class OfferController {
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('OFFER_ACTIVATE')")
     @Operation(summary = "Activar oferta", description = "Activa una oferta previamente desactivada")
-    @ApiResponse(responseCode = "204", description = "Oferta activada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Oferta activada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Oferta no encontrada")
+    })
     public ResponseEntity<Void> activate(
             @Parameter(description = "ID externo de la oferta") @PathVariable UUID externalId) {
         offerService.activate(externalId);
@@ -100,7 +152,14 @@ public class OfferController {
     @PatchMapping("/{externalId}/deactivate")
     @PreAuthorize("hasAuthority('OFFER_DEACTIVATE')")
     @Operation(summary = "Desactivar oferta", description = "Desactiva una oferta activa")
-    @ApiResponse(responseCode = "204", description = "Oferta desactivada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Oferta desactivada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Oferta no encontrada")
+    })
     public ResponseEntity<Void> deactivate(
             @Parameter(description = "ID externo de la oferta") @PathVariable UUID externalId) {
         offerService.deactivate(externalId);

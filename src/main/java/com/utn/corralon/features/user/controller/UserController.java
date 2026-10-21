@@ -5,6 +5,9 @@ import com.utn.corralon.features.user.dto.UserResponseDTO;
 import com.utn.corralon.features.user.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +31,16 @@ public class UserController {
     @PostMapping
     @PreAuthorize("hasAuthority('USER_CREATE')")
     @Operation(summary = "Crear usuario", description = "Crea un nuevo usuario en el sistema")
-    @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente",
+                    content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<UserResponseDTO> create(@RequestBody @Valid UserRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(dto));
     }
@@ -36,6 +48,14 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasAuthority('USER_LIST')")
     @Operation(summary = "Listar usuarios", description = "Retorna todos los usuarios del sistema")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuarios encontrados",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<UserResponseDTO>> getAll() {
         return ResponseEntity.ok(userService.getAll());
     }
@@ -44,7 +64,12 @@ public class UserController {
     @PreAuthorize("hasAuthority('USER_READ')")
     @Operation(summary = "Obtener usuario por ID", description = "Retorna un usuario por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario encontrado"),
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado",
+                    content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     public ResponseEntity<UserResponseDTO> getByExternalId(
@@ -56,7 +81,14 @@ public class UserController {
     @PreAuthorize("hasAuthority('USER_UPDATE')")
     @Operation(summary = "Actualizar usuario", description = "Actualiza los datos de un usuario existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuario actualizado"),
+            @ApiResponse(responseCode = "200", description = "Usuario actualizado",
+                    content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     public ResponseEntity<UserResponseDTO> update(
@@ -70,6 +102,10 @@ public class UserController {
     @Operation(summary = "Eliminar usuario", description = "Elimina un usuario del sistema")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Usuario eliminado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     public ResponseEntity<Void> delete(

@@ -5,6 +5,9 @@ import com.utn.corralon.features.category.dto.CategoryResponseDTO;
 import com.utn.corralon.features.category.service.ICategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,16 @@ public class CategoryController {
     @PostMapping
     @PreAuthorize("hasAuthority('CATEGORY_CREATE')")
     @Operation(summary = "Crear categoria", description = "Crea una nueva categoria")
-    @ApiResponse(responseCode = "201", description = "Categoria creada exitosamente")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Categoria creada exitosamente",
+                    content = @Content(schema = @Schema(implementation = CategoryResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<CategoryResponseDTO> create(@RequestBody @Valid CategoryRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(dto));
     }
@@ -37,6 +49,14 @@ public class CategoryController {
     @GetMapping
     @PreAuthorize("hasAuthority('CATEGORY_LIST')")
     @Operation(summary = "Listar categorias activas", description = "Retorna todas las categorias activas")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Categorias encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<CategoryResponseDTO>> getAll() {
         return ResponseEntity.ok(categoryService.getAll());
     }
@@ -45,7 +65,12 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('CATEGORY_READ')")
     @Operation(summary = "Obtener categoria por ID", description = "Retorna una categoria activa por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Categoria encontrada"),
+            @ApiResponse(responseCode = "200", description = "Categoria encontrada",
+                    content = @Content(schema = @Schema(implementation = CategoryResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
     })
     public ResponseEntity<CategoryResponseDTO> getByExternalId(
@@ -57,7 +82,14 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('CATEGORY_UPDATE')")
     @Operation(summary = "Actualizar categoria", description = "Actualiza los datos de una categoria existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Categoria actualizada"),
+            @ApiResponse(responseCode = "200", description = "Categoria actualizada",
+                    content = @Content(schema = @Schema(implementation = CategoryResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
     })
     public ResponseEntity<CategoryResponseDTO> update(
@@ -71,6 +103,10 @@ public class CategoryController {
     @Operation(summary = "Eliminar categoria", description = "Eliminacion logica de una categoria")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Categoria eliminada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
     })
     public ResponseEntity<Void> delete(
@@ -82,7 +118,14 @@ public class CategoryController {
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('CATEGORY_ACTIVATE')")
     @Operation(summary = "Activar categoria", description = "Activa una categoria previamente desactivada")
-    @ApiResponse(responseCode = "204", description = "Categoria activada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Categoria activada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
+    })
     public ResponseEntity<Void> activate(
             @Parameter(description = "ID externo de la categoria") @PathVariable UUID externalId) {
         categoryService.activate(externalId);
@@ -92,6 +135,14 @@ public class CategoryController {
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('CATEGORY_LIST_INACTIVE')")
     @Operation(summary = "Listar categorias inactivas", description = "Retorna todas las categorias inactivas")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Categorias inactivas encontradas",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = CategoryResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "No autorizado",
+                    content = @Content)
+    })
     public ResponseEntity<List<CategoryResponseDTO>> getInactive() {
         return ResponseEntity.ok(categoryService.getInactive());
     }
