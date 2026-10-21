@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.payment.entity;
+package com.utn.vinoteca.features.payment.enums;
 
 public enum PaymentMethod {
     CREDIT_CARD,

@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.payment.dto;
 
-import com.utn.vinoteca.features.payment.entity.PaymentMethod;
-import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.enums.PaymentMethod;
+import com.utn.vinoteca.features.payment.enums.PaymentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

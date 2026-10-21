@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.payment.service;
 
 import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
-import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.enums.PaymentStatus;
 import org.springframework.stereotype.Component;
 
 @Component

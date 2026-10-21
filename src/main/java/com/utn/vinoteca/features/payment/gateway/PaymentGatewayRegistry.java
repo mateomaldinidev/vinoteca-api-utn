@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.payment.gateway;
 
 import com.utn.vinoteca.exception.BusinessRuleException;
-import com.utn.vinoteca.features.payment.entity.PaymentMethod;
+import com.utn.vinoteca.features.payment.enums.PaymentMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
