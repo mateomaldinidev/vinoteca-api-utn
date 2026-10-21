@@ -16,8 +16,8 @@ public interface WineRepository extends JpaRepository<WineEntity, Long>, JpaSpec
     Optional<WineEntity> findByExternalId(UUID externalId);
     Optional<WineEntity> findByExternalIdAndActiveTrue(UUID externalId);
     Optional<WineEntity> findByNameAndWinery(String name, WineryEntity winery);
-
-
+    Optional<WineEntity> findByNameAndWineryAndVintage(String name, WineryEntity winery, Integer vintage);
 
     boolean existsByNameAndWinery(String name, WineryEntity winery);
+    boolean existsByNameAndWineryAndVintage(String name, WineryEntity winery, Integer vintage);
 }

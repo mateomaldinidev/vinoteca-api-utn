@@ -14,7 +14,7 @@ API REST para la gestión integral de un ecommerce de vinos. Proyecto académico
 El sistema permite administrar de forma completa una vinoteca con las siguientes funcionalidades:
 
 - **Autenticación y autorización** con JWT y control de roles (GUEST, CUSTOMER, EMPLOYEE, ADMIN)
-- **Catálogo de vinos** con tipos de vino, bodegas y distribuidores
+- **Catálogo de vinos** con tipos de vino, bodegas, distribuidores y varietales
 - **Formatos de vino** (botella 750 ml, magnum, caja x6) con stock y precios independientes
 - **Control de stock** con trazabilidad total de movimientos (ingresos, ventas, cancelaciones, ajustes)
 - **Carrito de compras** persistente por usuario
@@ -135,7 +135,9 @@ Si usás el MySQL de Docker Compose, dejá `DB_PORT=3307`; si usás un MySQL loc
 
 La aplicación estará disponible en `http://localhost:8081`.
 
-> **Nota:** La configuración de `application.yaml` espera las variables de entorno definidas en `.env`. En ejecución local usa `localhost:3306` por defecto para MySQL.
+Al arrancar, `WineDataInitializer` carga tipos de vino, varietales, bodegas, distribuidores, vinos y formatos de ejemplo. Es idempotente: se puede reiniciar sin duplicar datos. Para desactivarlo, definí `app.seed.enabled=false`.
+
+> **Nota:** La configuración de `application.yaml` toma las variables de `.env`. `DB_PORT` define el puerto de MySQL (`3307` con Docker Compose, `3306` con un MySQL local).
 
 ---
 
@@ -194,9 +196,9 @@ El sistema implementa un modelo de seguridad basado en roles con permisos granul
 
 | Rol | Descripción | Permisos principales |
 |-----|-------------|---------------------|
-| **GUEST** | Usuario no autenticado | Ver catálogo de vinos, tipos de vino, bodegas y ofertas |
+| **GUEST** | Usuario no autenticado | Ver catálogo de vinos, tipos de vino, bodegas, varietales y ofertas |
 | **CUSTOMER** | Cliente registrado | Todo lo de GUEST + carrito, órdenes, pagos, direcciones, notificaciones |
-| **EMPLOYEE** | Empleado de la vinoteca | Gestión de vinos, formatos, stock, tipos de vino, bodegas, distribuidores, ofertas y órdenes |
+| **EMPLOYEE** | Empleado de la vinoteca | Gestión de vinos, formatos, stock, tipos de vino, varietales, bodegas, distribuidores, ofertas y órdenes |
 | **ADMIN** | Administrador | Acceso total a todos los permisos del sistema |
 
 Los permisos se verifican mediante `@PreAuthorize` en cada endpoint. Un usuario puede tener múltiples roles simultáneamente.
@@ -235,6 +237,20 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 | PUT    | `/{externalId}`          | Actualizar vino              | `WINE_UPDATE`       |
 | DELETE | `/{externalId}`          | Dar de baja (soft delete)        | `WINE_DELETE`       |
 | PATCH  | `/{externalId}/activate` | Reactivar vino               | `WINE_ACTIVATE`     |
+
+> **Filtros de `/search` y `/inactive`:** `name`, `distributorId`, `wineTypeId`, `wineryId`, `grapeVarietyId`, `vintage` y `region` (búsqueda parcial, sin distinguir mayúsculas).
+
+### Varietales (`/api/grape-varieties`)
+
+| Método | Path                      | Descripción                       | Permiso                        |
+|--------|--------------------------|-----------------------------------|--------------------------------|
+| GET    | `/`                      | Listar varietales activos         | `GRAPE_VARIETY_LIST`           |
+| GET    | `/inactive`              | Listar varietales inactivos       | `GRAPE_VARIETY_LIST_INACTIVE`  |
+| GET    | `/{externalId}`          | Obtener varietal por ID           | `GRAPE_VARIETY_READ`           |
+| POST   | `/`                      | Crear varietal                    | `GRAPE_VARIETY_CREATE`         |
+| PUT    | `/{externalId}`          | Actualizar varietal               | `GRAPE_VARIETY_UPDATE`         |
+| DELETE | `/{externalId}`          | Dar de baja (soft delete)         | `GRAPE_VARIETY_DELETE`         |
+| PATCH  | `/{externalId}/activate` | Reactivar varietal                | `GRAPE_VARIETY_ACTIVATE`       |
 
 ### Formatos de Vino (`/api/wine-variants`)
 
@@ -376,7 +392,8 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 │                                                                     │
 │  Distributor ──┐                                                    │
 │  WineType ─────┼──► Wine ──1:N──► WineVariant                       │
-│  Winery ───────┘                       │                            │
+│  Winery ───────┘       ▲                                            │
+│  GrapeVariety ────N:M──┘                                            │
 │                                     ├── 1:N ──► StockMovement       │
 │                                     ├── N:M ──► OfferProduct ◄── Offer│
 │                                     ├── N:1 ──► CartItem ◄── Cart   │
@@ -405,6 +422,7 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 | `UserEntity`       | Datos personales del usuario (nombre, email, etc.) |
 | `CredentialsEntity`| Credenciales de auth, roles y refresh token        |
 | `WineEntity`    | Vino del catálogo (Malbec Reserva, etc.)       |
+| `GrapeVarietyEntity` | Varietal o uva que compone el vino (Malbec, etc.) |
 | `WineVariantEntity` | Formato comercial de un vino (Botella 750 ml, etc.) |
 | `StockMovementEntity`  | Registro de todo cambio de stock               |
 | `CartEntity`       | Carrito persistente por usuario                    |
@@ -424,9 +442,13 @@ A continuación un resumen de los endpoints agrupados por dominio. Para la docum
 | Emails únicos | No pueden existir dos usuarios con el mismo email |
 | Toda modificación de stock genera un movimiento | Sin excepción, con tipo: `ENTRY`, `SALE`, `CANCELLATION`, `ADJUSTMENT` |
 | Total de orden congelado | El total se calcula al momento de creación y no varía si el precio cambia después |
-| Baja lógica | Los vinos, tipos de vino, bodegas, distribuidores y formatos se desactivan, no se eliminan físicamente |
+| Baja lógica | Los vinos, tipos de vino, bodegas, distribuidores, varietales y formatos se desactivan, no se eliminan físicamente |
 | Cancelación devuelve stock | Al cancelar una orden en `PENDING_PAYMENT`, el stock se repone automáticamente |
 | Precio mayorista | Si la cantidad comprada alcanza `wholesaleMinQty`, se aplica el precio mayorista a todas las unidades |
+| Vino con varietal | Todo vino debe tener al menos un varietal (un corte puede tener varios) |
+| Añada válida | Entre 1900 y el año actual + 1 |
+| Graduación alcohólica | Entre 0 y 100 |
+| Vino único | No se repite el mismo nombre + añada + bodega |
 
 ---
 
@@ -453,6 +475,11 @@ Las validaciones de campos (`@Valid`) devuelven un mapa de errores con los campo
 ```
 src/main/java/com/utn/vinoteca/
 ├── VinotecaApplication.java
+├── config/
+│   ├── AsyncConfig.java
+│   ├── ModelMapperConfig.java
+│   ├── OpenApiConfig.java
+│   └── WineDataInitializer.java   # Seed idempotente del catálogo
 ├── exception/
 │   ├── GlobalExceptionHandler.java
 │   ├── ResourceNotFoundException.java
@@ -469,6 +496,7 @@ src/main/java/com/utn/vinoteca/
     ├── wineVariant/          # Formatos + stock
     ├── stockMovement/           # Movimientos de stock
     ├── wineType/                # Tipos de vino
+    ├── grapeVariety/            # Varietales
     ├── winery/                   # Bodegas
     ├── distributor/                # Distribuidores
     ├── offer/                   # Ofertas

@@ -1,10 +1,11 @@
 package com.utn.vinoteca.features.wine.dto;
 
+import com.utn.vinoteca.features.grapeVariety.dto.GrapeVarietySummaryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.hibernate.annotations.SecondaryRow;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -12,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class WineResponseDTO{
+public class WineResponseDTO {
 
     @Schema(description = "Unique external identifier of the wine", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID externalId;
@@ -23,8 +24,23 @@ public class WineResponseDTO{
     @Schema(description = "Wine description", example = "Malbec de guarda con notas de frutos rojos")
     private String description;
 
+    @Schema(description = "Harvest year", example = "2021")
+    private Integer vintage;
+
+    @Schema(description = "Wine region", example = "Valle de Uco")
+    private String region;
+
+    @Schema(description = "Alcohol by volume percentage", example = "13.5")
+    private BigDecimal alcohol;
+
+    @Schema(description = "Tasting notes", example = "Aromas de ciruela y violetas, final persistente")
+    private String tastingNotes;
+
     @Schema(description = "Indicates if the wine is active", example = "true")
     private Boolean active;
+
+    @Schema(description = "Grape varieties that compose the wine")
+    private List<GrapeVarietySummaryDTO> grapeVarieties;
 
     @Schema(description = "External identifier of the distributor", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID distributorId;
@@ -43,5 +59,4 @@ public class WineResponseDTO{
 
     @Schema(description = "Winery name", example = "Zuccardi")
     private String wineryName;
-
 }

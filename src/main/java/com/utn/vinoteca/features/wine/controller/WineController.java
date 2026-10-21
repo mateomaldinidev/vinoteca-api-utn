@@ -134,11 +134,14 @@ public class WineController {
             @Parameter(description = "Nombre del vino") @RequestParam(required = false) String name,
             @Parameter(description = "ID del distribuidor") @RequestParam(required = false) UUID distributorId,
             @Parameter(description = "ID del tipo de vino") @RequestParam(required = false) UUID wineTypeId,
-            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId
+            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId,
+            @Parameter(description = "ID del varietal") @RequestParam(required = false) UUID grapeVarietyId,
+            @Parameter(description = "Añada") @RequestParam(required = false) Integer vintage,
+            @Parameter(description = "Región (búsqueda parcial)") @RequestParam(required = false) String region
     ) {
         return ResponseEntity
                 .status(200)
-                .body(wineService.search(name, distributorId, wineTypeId, wineryId));
+                .body(wineService.search(name, distributorId, wineTypeId, wineryId, grapeVarietyId, vintage, region));
     }
 
     @PreAuthorize("hasAuthority('WINE_LIST_INACTIVE')")
@@ -154,7 +157,10 @@ public class WineController {
             @Parameter(description = "Nombre del vino") @RequestParam(required = false) String name,
             @Parameter(description = "ID del distribuidor") @RequestParam(required = false) UUID distributorId,
             @Parameter(description = "ID del tipo de vino") @RequestParam(required = false) UUID wineTypeId,
-            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId) {
+            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId,
+            @Parameter(description = "ID del varietal") @RequestParam(required = false) UUID grapeVarietyId,
+            @Parameter(description = "Añada") @RequestParam(required = false) Integer vintage,
+            @Parameter(description = "Región (búsqueda parcial)") @RequestParam(required = false) String region) {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -162,7 +168,10 @@ public class WineController {
                                 name,
                                 distributorId,
                                 wineTypeId,
-                                wineryId));
+                                wineryId,
+                                grapeVarietyId,
+                                vintage,
+                                region));
     }
 
 }
