@@ -52,14 +52,15 @@ El sistema permite administrar de forma completa una vinoteca con las siguientes
 
 ## Variables de Entorno
 
-El proyecto utiliza un archivo `.env` en la raíz para la configuración. Un ejemplo de `.env`:
+El proyecto utiliza un archivo `.env` en la raíz para la configuración. Spring Boot lo carga automáticamente al arrancar (`spring.config.import`), así que no hace falta exportar las variables a mano. Un ejemplo de `.env`:
 
 ```properties
 DB_NAME=vinoteca_db
 DB_USER=user
 DB_PASSWORD=password
+DB_PORT=3307
 MYSQL_ROOT_PASSWORD=root
-JWT_SECRET=clave_de_ejemplo
+JWT_SECRET=replace_with_a_secure_random_secret_of_at_least_32_chars
 JWT_EXPIRATION=86400000
 ```
 
@@ -68,6 +69,7 @@ JWT_EXPIRATION=86400000
 | `DB_NAME`            | Nombre de la base de datos MySQL              | `vinoteca_db`     |
 | `DB_USER`            | Usuario de la base de datos                   | `user`            |
 | `DB_PASSWORD`        | Contraseña de la base de datos                | `password`        |
+| `DB_PORT`            | Puerto de MySQL (`3307` con Docker Compose)   | `3306`            |
 | `MYSQL_ROOT_PASSWORD`| Contraseña root de MySQL                      | `root`            |
 | `JWT_SECRET`         | Clave secreta para firmar tokens JWT          | *(requerido)*     |
 | `JWT_EXPIRATION`     | Duración del access token en milisegundos     | `86400000` (24hs) |
@@ -91,9 +93,10 @@ Levanta la aplicación junto con MySQL y Mailhog (interceptor de emails para des
 docker compose up --build
 ```
 
-Esto levanta tres servicios:
+Esto levanta cuatro servicios:
 - **app** — La API en `http://localhost:8080`
 - **mysql** — Base de datos MySQL 8.0 en el puerto `3307` (externo)
+- **db-init** — Servicio de un solo uso que crea `DB_NAME` y otorga permisos al usuario. Corre incluso si el volumen de MySQL ya existía.
 - **mailhog** — Interceptor de emails en `http://localhost:8025`
 
 Para detener:
@@ -122,7 +125,9 @@ CREATE DATABASE vinoteca_db;
 cp .env.example .env
 ```
 
-3. Ejecutar la aplicación:
+Si usás el MySQL de Docker Compose, dejá `DB_PORT=3307`; si usás un MySQL local, usá `3306`.
+
+3. Ejecutar la aplicación (el `.env` se carga solo):
 
 ```bash
 ./mvnw spring-boot:run

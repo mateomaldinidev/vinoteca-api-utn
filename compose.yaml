@@ -20,6 +20,26 @@ services:
     networks:
       - vinoteca-network
 
+  # Crea la base y otorga permisos aunque el volumen de MySQL ya exista.
+  # Los scripts de /docker-entrypoint-initdb.d solo corren con volumen vacio.
+  db-init:
+    image: mysql:8.0
+    container_name: vinoteca-db-init
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_NAME: ${DB_NAME:-vinoteca_db}
+      DB_USER: ${DB_USER:-user}
+      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD:-root}
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        mysql -h mysql -uroot -e "CREATE DATABASE IF NOT EXISTS $$DB_NAME; GRANT ALL PRIVILEGES ON $$DB_NAME.* TO '$$DB_USER'@'%'; FLUSH PRIVILEGES;"
+    networks:
+      - vinoteca-network
+
   mailhog:
     image: mailhog/mailhog
     container_name: vinoteca-mailhog
@@ -51,6 +71,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - vinoteca-network
 
