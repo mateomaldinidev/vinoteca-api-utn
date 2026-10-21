@@ -43,7 +43,7 @@ public class SecurityDataInitializer {
             roleRepository.save(admin);
 
             // GUEST
-            createRoleIfNotExists(
+            upsertRole(
                     Roles.ROLE_GUEST,
                     List.of(
                             Permits.WINE_READ,
@@ -52,6 +52,8 @@ public class SecurityDataInitializer {
                             Permits.WINE_VARIANT_LIST,
                             Permits.WINE_TYPE_READ,
                             Permits.WINE_TYPE_LIST,
+                            Permits.GRAPE_VARIETY_READ,
+                            Permits.GRAPE_VARIETY_LIST,
                             Permits.WINERY_READ,
                             Permits.WINERY_LIST,
                             Permits.OFFER_READ,
@@ -60,7 +62,7 @@ public class SecurityDataInitializer {
             );
 
             // CUSTOMER
-            createRoleIfNotExists(
+            upsertRole(
                     Roles.ROLE_CUSTOMER,
                     List.of(
                             Permits.WINE_READ,
@@ -69,6 +71,8 @@ public class SecurityDataInitializer {
                             Permits.WINE_VARIANT_LIST,
                             Permits.WINE_TYPE_READ,
                             Permits.WINE_TYPE_LIST,
+                            Permits.GRAPE_VARIETY_READ,
+                            Permits.GRAPE_VARIETY_LIST,
                             Permits.WINERY_READ,
                             Permits.WINERY_LIST,
                             Permits.OFFER_READ,
@@ -100,7 +104,7 @@ public class SecurityDataInitializer {
             );
 
             // EMPLOYEE
-            createRoleIfNotExists(
+            upsertRole(
                     Roles.ROLE_EMPLOYEE,
                     List.of(
                             Permits.WINE_CREATE,
@@ -124,6 +128,13 @@ public class SecurityDataInitializer {
                             Permits.WINE_TYPE_UPDATE,
                             Permits.WINE_TYPE_DELETE,
                             Permits.WINE_TYPE_ACTIVATE,
+
+                            Permits.GRAPE_VARIETY_CREATE,
+                            Permits.GRAPE_VARIETY_READ,
+                            Permits.GRAPE_VARIETY_LIST,
+                            Permits.GRAPE_VARIETY_UPDATE,
+                            Permits.GRAPE_VARIETY_DELETE,
+                            Permits.GRAPE_VARIETY_ACTIVATE,
 
                             Permits.WINERY_CREATE,
                             Permits.WINERY_UPDATE,
@@ -161,16 +172,15 @@ public class SecurityDataInitializer {
         };
     }
 
-    private void createRoleIfNotExists(
+    private void upsertRole(
             Roles role,
             List<Permits> permits
     ) {
 
-        if (roleRepository.findByRole(role).isPresent()) {
-            return;
-        }
+        RoleEntity roleEntity = roleRepository.findByRole(role)
+                .orElseGet(() -> new RoleEntity(role));
 
-        RoleEntity roleEntity = new RoleEntity(role);
+        roleEntity.getPermits().clear();
 
         permits.forEach(permission ->
                 permitRepository.findByPermit(permission)
