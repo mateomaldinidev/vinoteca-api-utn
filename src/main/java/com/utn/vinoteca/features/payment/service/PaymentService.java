@@ -14,6 +14,7 @@ import com.utn.vinoteca.features.payment.dto.PaymentRequestDTO;
 import com.utn.vinoteca.features.payment.dto.PaymentResponseDTO;
 import com.utn.vinoteca.features.payment.entity.PaymentEntity;
 import com.utn.vinoteca.features.payment.entity.PaymentStatus;
+import com.utn.vinoteca.features.payment.gateway.PaymentGatewayRegistry;
 import com.utn.vinoteca.features.payment.mapper.PaymentMapper;
 import com.utn.vinoteca.features.payment.repository.PaymentRepository;
 import com.utn.vinoteca.features.stock.service.StockService;
@@ -36,7 +37,7 @@ public class PaymentService implements IPaymentService {
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
     private final StockService stockService;
-    private final CardPaymentSimulator cardPaymentSimulator;
+    private final PaymentGatewayRegistry paymentGatewayRegistry;
     private final OrderStatusPolicy orderStatusPolicy;
 
     @Override
@@ -67,7 +68,7 @@ public class PaymentService implements IPaymentService {
         payment = paymentRepository.save(payment);
 
         // Simular pago
-        PaymentStatus result = cardPaymentSimulator.simulate(request);
+        PaymentStatus result = paymentGatewayRegistry.forMethod(request.getPaymentMethod()).charge(request);
 
         // CASO APPROVED
         if (result == PaymentStatus.APPROVED) {
