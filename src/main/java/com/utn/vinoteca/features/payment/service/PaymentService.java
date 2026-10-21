@@ -39,6 +39,7 @@ public class PaymentService implements IPaymentService {
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
     private final StockMovementRepository stockMovementRepository;
+    private final CardPaymentSimulator cardPaymentSimulator;
 
     @Override
     public PaymentResponseDTO pay(PaymentRequestDTO request) {
@@ -66,7 +67,7 @@ public class PaymentService implements IPaymentService {
         payment = paymentRepository.save(payment);
 
         // Simular pago
-        PaymentStatus result = simulateCard(request);
+        PaymentStatus result = cardPaymentSimulator.simulate(request);
 
         // CASO APPROVED
         if (result == PaymentStatus.APPROVED) {
@@ -144,14 +145,6 @@ public class PaymentService implements IPaymentService {
         stockMovementRepository.save(movement);
     }
 
-
-    // SIMULACIÓN TARJETA
-    private PaymentStatus simulateCard(PaymentRequestDTO request) {
-
-        return Math.random() > 0.3
-                ? PaymentStatus.APPROVED
-                : PaymentStatus.REJECTED;
-    }
 
     public PaymentResponseDTO getByOrderId(UUID orderId) {
 
