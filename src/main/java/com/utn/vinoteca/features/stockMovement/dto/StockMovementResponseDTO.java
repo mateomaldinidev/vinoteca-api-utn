@@ -17,6 +17,6 @@ public record StockMovementResponseDTO(
     LocalDateTime movementDate,
     @Schema(description = "Reason for the stock movement", example = "Ajuste por inventario mensual")
     String reason,
-    @Schema(description = "External identifier of the product variant", example = "550e8400-e29b-41d4-a716-446655440001")
+    @Schema(description = "External identifier of the wine variant", example = "550e8400-e29b-41d4-a716-446655440001")
     UUID variantExternalId
 ) {}

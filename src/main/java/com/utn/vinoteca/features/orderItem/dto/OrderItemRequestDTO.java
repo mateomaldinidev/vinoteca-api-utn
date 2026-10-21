@@ -15,12 +15,12 @@ import java.util.UUID;
 @Builder
 public class OrderItemRequestDTO {
 
-    @NotNull(message = "Product variant external ID is required")
-    @Schema(description = "External identifier of the product variant", example = "550e8400-e29b-41d4-a716-446655440000")
-    private UUID productVariantExternalId;
+    @NotNull(message = "Wine variant external ID is required")
+    @Schema(description = "External identifier of the wine variant", example = "550e8400-e29b-41d4-a716-446655440000")
+    private UUID wineVariantExternalId;
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
-    @Schema(description = "Quantity of the product variant ordered", example = "5")
+    @Schema(description = "Quantity of the wine variant ordered", example = "5")
     private Integer quantity;
 }

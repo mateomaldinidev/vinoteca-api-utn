@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.offer_product.entity;
 
 import com.utn.vinoteca.features.offer.entity.OfferEntity;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,10 +24,10 @@ public class OfferProductEntity {
     private OfferEntity offer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_variant_id", nullable = false)
-    private ProductVariantEntity productVariant;
+    @JoinColumn(name = "wine_variant_id", nullable = false)
+    private WineVariantEntity wineVariant;
 
     @Column(name = "discounted_price",nullable = false, precision = 19, scale = 2)
-    private BigDecimal discountedPrice;//agregamos esto porque el precio original esta en productVatiant y el precio con descuento es distinto por oferta
+    private BigDecimal discountedPrice;//agregamos esto porque el precio original esta en wineVatiant y el precio con descuento es distinto por oferta
 
 }

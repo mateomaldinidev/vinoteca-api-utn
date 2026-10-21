@@ -15,8 +15,8 @@ import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
 import com.utn.vinoteca.features.order.service.OrderService;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
-import com.utn.vinoteca.features.productVariant.repository.ProductVariantRepository;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
+import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import com.utn.vinoteca.features.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -37,7 +37,7 @@ import java.util.Map;
 public class CartServiceImpl implements ICartService {
     private final CartRepository cartRepository;
     private final UserRepository userRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final WineVariantRepository wineVariantRepository;
     private final ModelMapper modelMapper;
     private final OrderService orderService;
     private final OfferProductRepository offerProductRepository;
@@ -55,14 +55,14 @@ public class CartServiceImpl implements ICartService {
         // Mapear los ítems existentes del carrito para una búsqueda eficiente
         Map<UUID, CartItemEntity> existingItemsMap = cart.getCartItems().stream()
                 .collect(Collectors.toMap(
-                        item -> item.getProductVariant().getExternalId(),
+                        item -> item.getWineVariant().getExternalId(),
                         item -> item
                 ));
 
         // Mapear los ítems entrantes de la solicitud para una búsqueda eficiente
         Map<UUID, CartItemRequestDTO> incomingItemsMap = cartRequest.getItems().stream()
                 .collect(Collectors.toMap(
-                        CartItemRequestDTO::getProductVariantId,
+                        CartItemRequestDTO::getWineVariantId,
                         item -> item
                 ));
 
@@ -71,23 +71,23 @@ public class CartServiceImpl implements ICartService {
 
         // Procesar ítems existentes: actualizar o marcar para eliminación
         for (CartItemEntity existingItem : new ArrayList<>(cart.getCartItems())) {
-            UUID productVariantId = existingItem.getProductVariant().getExternalId();
-            CartItemRequestDTO incomingItemRequest = incomingItemsMap.get(productVariantId);
+            UUID wineVariantId = existingItem.getWineVariant().getExternalId();
+            CartItemRequestDTO incomingItemRequest = incomingItemsMap.get(wineVariantId);
 
             if (incomingItemRequest != null) {
-                ProductVariantEntity productVariant = productVariantRepository.findByExternalId(productVariantId)
-                        .orElseThrow(() -> new ResourceNotFoundException("ProductVariant not found with ID: ", productVariantId));
+                WineVariantEntity wineVariant = wineVariantRepository.findByExternalId(wineVariantId)
+                        .orElseThrow(() -> new ResourceNotFoundException("WineVariant not found with ID: ", wineVariantId));
 
-                // Validar si el producto está activo
-                if (!productVariant.getActive()) {
-                    throw new BusinessRuleException("Product variant with ID " + productVariantId + " is not active and cannot be added to cart.");
+                // Validar si el vino está activo
+                if (!wineVariant.getActive()) {
+                    throw new BusinessRuleException("Wine variant with ID " + wineVariantId + " is not active and cannot be added to cart.");
                 }
 
-                if (productVariant.getStock() < incomingItemRequest.getQuantity()) {
-                    throw new StockInsufficientException(productVariant.getExternalId().toString());
+                if (wineVariant.getStock() < incomingItemRequest.getQuantity()) {
+                    throw new StockInsufficientException(wineVariant.getExternalId().toString());
                 }
                 existingItem.setQuantity(incomingItemRequest.getQuantity());
-                incomingItemsMap.remove(productVariantId);
+                incomingItemsMap.remove(wineVariantId);
             } else {
                 itemsToRemove.add(existingItem);
             }
@@ -100,20 +100,20 @@ public class CartServiceImpl implements ICartService {
 
         //Añadir nuevos ítems (los que quedan en incomingItemsMap)
         for (CartItemRequestDTO newItemRequest : incomingItemsMap.values()) {
-            ProductVariantEntity productVariant = productVariantRepository.findByExternalId(newItemRequest.getProductVariantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("ProductVariant not found with ID:", newItemRequest.getProductVariantId()));
+            WineVariantEntity wineVariant = wineVariantRepository.findByExternalId(newItemRequest.getWineVariantId())
+                    .orElseThrow(() -> new ResourceNotFoundException("WineVariant not found with ID:", newItemRequest.getWineVariantId()));
 
-            // Validar si el producto está activo
-            if (!productVariant.getActive()) {
-                throw new BusinessRuleException("Product variant with ID " + newItemRequest.getProductVariantId() + " is not active and cannot be added to cart.");
+            // Validar si el vino está activo
+            if (!wineVariant.getActive()) {
+                throw new BusinessRuleException("Wine variant with ID " + newItemRequest.getWineVariantId() + " is not active and cannot be added to cart.");
             }
 
-            if (productVariant.getStock() < newItemRequest.getQuantity()) {
-                throw new StockInsufficientException(productVariant.getExternalId().toString());
+            if (wineVariant.getStock() < newItemRequest.getQuantity()) {
+                throw new StockInsufficientException(wineVariant.getExternalId().toString());
             }
 
             CartItemEntity newCartItem = CartItemEntity.builder()
-                    .productVariant(productVariant)
+                    .wineVariant(wineVariant)
                     .quantity(newItemRequest.getQuantity())
                     .build();
             cart.addCartItem(newCartItem);
@@ -125,7 +125,7 @@ public class CartServiceImpl implements ICartService {
     }
 
     @Transactional
-    public CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID productVariantId, CartItemQuantityUpdateDTO updateDTO) {
+    public CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID wineVariantId, CartItemQuantityUpdateDTO updateDTO) {
         UserEntity user = getActiveUser(userExternalId);
 
         CartEntity cart = cartRepository.findByUser(user)
@@ -133,9 +133,9 @@ public class CartServiceImpl implements ICartService {
 
         // Buscar el CartItemEntity específico
         CartItemEntity cartItemToUpdate = cart.getCartItems().stream()
-                .filter(item -> item.getProductVariant().getExternalId().equals(productVariantId))
+                .filter(item -> item.getWineVariant().getExternalId().equals(wineVariantId))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item for product variant not found with ID: ", productVariantId ));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item for wine variant not found with ID: ", wineVariantId ));
 
         Integer newQuantity = updateDTO.getQuantity();
 
@@ -143,16 +143,16 @@ public class CartServiceImpl implements ICartService {
         if (newQuantity <= 0) {
             cart.removeCartItem(cartItemToUpdate);
         } else {
-            ProductVariantEntity productVariant = cartItemToUpdate.getProductVariant();
+            WineVariantEntity wineVariant = cartItemToUpdate.getWineVariant();
 
-            // Validar si el producto está activo (aunque ya esté en el carrito, podría haberse desactivado)
-            if (!productVariant.getActive()) {
-                throw new BusinessRuleException("Product variant with ID " + productVariantId + " is not active and cannot be updated in cart.");
+            // Validar si el vino está activo (aunque ya esté en el carrito, podría haberse desactivado)
+            if (!wineVariant.getActive()) {
+                throw new BusinessRuleException("Wine variant with ID " + wineVariantId + " is not active and cannot be updated in cart.");
             }
 
             // Validar stock para la nueva cantidad
-            if (productVariant.getStock() < newQuantity) {
-                throw new StockInsufficientException(productVariant.getExternalId().toString());
+            if (wineVariant.getStock() < newQuantity) {
+                throw new StockInsufficientException(wineVariant.getExternalId().toString());
             }
             cartItemToUpdate.setQuantity(newQuantity);
         }
@@ -190,12 +190,12 @@ public class CartServiceImpl implements ICartService {
         List<CartItemResponseDTO> itemDTOs = cart.getCartItems().stream()
                 .map(cartItemEntity -> {
                     CartItemResponseDTO itemResponseDTO = modelMapper.map(cartItemEntity, CartItemResponseDTO.class);
-                    itemResponseDTO.setProductName(cartItemEntity.getProductVariant().getProduct().getName());
-                    itemResponseDTO.setVariantAttribute(cartItemEntity.getProductVariant().getAttribute());
+                    itemResponseDTO.setWineName(cartItemEntity.getWineVariant().getWine().getName());
+                    itemResponseDTO.setVariantAttribute(cartItemEntity.getWineVariant().getAttribute());
 
-                    ProductVariantEntity productVariant = cartItemEntity.getProductVariant();
+                    WineVariantEntity wineVariant = cartItemEntity.getWineVariant();
                     BigDecimal unitPrice = calculateUnitPrice(
-                            productVariant,
+                            wineVariant,
                             cartItemEntity.getQuantity());
 
                     itemResponseDTO.setUnitPrice(unitPrice);
@@ -226,7 +226,7 @@ public class CartServiceImpl implements ICartService {
         return user;
     }
 
-    private BigDecimal calculateUnitPrice(ProductVariantEntity variant, Integer quantity) {
+    private BigDecimal calculateUnitPrice(WineVariantEntity variant, Integer quantity) {
 
         BigDecimal offerPrice = offerProductRepository
                 .findActiveOfferForVariant(variant.getExternalId())

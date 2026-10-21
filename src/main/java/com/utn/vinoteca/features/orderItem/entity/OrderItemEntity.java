@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.orderItem.entity;
 
 import com.utn.vinoteca.features.order.entity.OrderEntity;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -31,8 +31,8 @@ public class OrderItemEntity {
     private OrderEntity order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="product_variant_id",nullable = false)
-    private ProductVariantEntity productVariant;
+    @JoinColumn(name="wine_variant_id",nullable = false)
+    private WineVariantEntity wineVariant;
 
     @Column(name="quantity",nullable = false)
     private Integer quantity;

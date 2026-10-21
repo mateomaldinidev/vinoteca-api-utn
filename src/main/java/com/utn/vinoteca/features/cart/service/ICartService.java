@@ -13,7 +13,7 @@ public interface ICartService {
 
     CartResponseDTO createOrUpdateCart(CartRequestDTO cartRequest);
 
-    CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID productVariantId, CartItemQuantityUpdateDTO updateDTO);
+    CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID wineVariantId, CartItemQuantityUpdateDTO updateDTO);
 
     CartResponseDTO getCartByUserId(UUID userExternalId);
 

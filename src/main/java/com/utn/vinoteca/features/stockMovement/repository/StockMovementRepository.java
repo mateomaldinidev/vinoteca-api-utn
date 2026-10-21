@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.stockMovement.repository;
 
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

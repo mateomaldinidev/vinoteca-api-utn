@@ -16,9 +16,9 @@ public class CartItemMapper {
 
     public CartItemResponseDTO toResponse(CartItemEntity entity) {
         CartItemResponseDTO dto = modelMapper.map(entity, CartItemResponseDTO.class);
-        dto.setProductName(entity.getProductVariant().getProduct().getName());
-        dto.setVariantAttribute(entity.getProductVariant().getAttribute());
-        dto.setUnitPrice(entity.getProductVariant().getPrice());
+        dto.setWineName(entity.getWineVariant().getWine().getName());
+        dto.setVariantAttribute(entity.getWineVariant().getAttribute());
+        dto.setUnitPrice(entity.getWineVariant().getPrice());
         return dto;
     }
 

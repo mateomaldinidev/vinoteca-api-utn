@@ -15,8 +15,8 @@ import com.utn.vinoteca.features.payment.entity.PaymentEntity;
 import com.utn.vinoteca.features.payment.entity.PaymentStatus;
 import com.utn.vinoteca.features.payment.mapper.PaymentMapper;
 import com.utn.vinoteca.features.payment.repository.PaymentRepository;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
-import com.utn.vinoteca.features.productVariant.repository.ProductVariantRepository;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
+import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
 import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
 import com.utn.vinoteca.features.stockMovement.repository.StockMovementRepository;
@@ -34,7 +34,7 @@ public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final WineVariantRepository wineVariantRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
@@ -115,13 +115,13 @@ public class PaymentService implements IPaymentService {
 
         for (OrderItemEntity item : order.getItems()) {
 
-            ProductVariantEntity variant = item.getProductVariant();
+            WineVariantEntity variant = item.getWineVariant();
 
             variant.setStock(
                     variant.getStock() + item.getQuantity()
             );
 
-            productVariantRepository.save(variant);
+            wineVariantRepository.save(variant);
 
             createStockMovement(
                     variant,
@@ -132,7 +132,7 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    private void createStockMovement(ProductVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
+    private void createStockMovement(WineVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
         StockMovementEntity movement = StockMovementEntity.builder()
                 .movementDate(LocalDateTime.now())
                 .quantity(quantity)

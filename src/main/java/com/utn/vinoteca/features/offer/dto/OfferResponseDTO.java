@@ -21,6 +21,6 @@ public record OfferResponseDTO(
     LocalDateTime endDate,
     @Schema(description = "Indicates if the offer is active", example = "true")
     Boolean active,
-    @Schema(description = "List of products included in the offer")
+    @Schema(description = "List of wines included in the offer")
     List<OfferProductResponseDTO> offerProducts
 ){}

@@ -5,7 +5,7 @@ import com.utn.vinoteca.features.order.entity.OrderEntity;
 import com.utn.vinoteca.features.orderItem.dto.OrderItemRequestDTO;
 import com.utn.vinoteca.features.orderItem.dto.OrderItemResponseDTO;
 import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -27,8 +27,8 @@ public class OrderItemMapper {
                 entity.getOrder().getExternalId()
         );
 
-        dto.setProductVariantExternalId(
-                entity.getProductVariant().getExternalId()
+        dto.setWineVariantExternalId(
+                entity.getWineVariant().getExternalId()
         );
 
         return dto;
@@ -36,7 +36,7 @@ public class OrderItemMapper {
 
     public OrderItemEntity toEntity(
             OrderEntity order,
-            ProductVariantEntity variant,
+            WineVariantEntity variant,
             Integer quantity,
             BigDecimal unitPrice,
             BigDecimal subtotal
@@ -44,7 +44,7 @@ public class OrderItemMapper {
 
         return OrderItemEntity.builder()
                 .order(order)
-                .productVariant(variant)
+                .wineVariant(variant)
                 .quantity(quantity)
                 .unitPrice(unitPrice)
                 .subtotal(subtotal)

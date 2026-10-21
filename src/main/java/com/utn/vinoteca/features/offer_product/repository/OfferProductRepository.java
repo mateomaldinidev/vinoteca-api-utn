@@ -14,14 +14,14 @@ import java.util.UUID;
 
 @Repository
 public interface OfferProductRepository extends JpaRepository<OfferProductEntity, Long> {
-    Optional<OfferProductEntity> findByOfferExternalIdAndProductVariantExternalId(
-            UUID offerExternalId, UUID productVariantExternalId);
-    boolean existsByOfferExternalIdAndProductVariantExternalId(
-            UUID offerExternalId, UUID productVariantExternalId);
+    Optional<OfferProductEntity> findByOfferExternalIdAndWineVariantExternalId(
+            UUID offerExternalId, UUID wineVariantExternalId);
+    boolean existsByOfferExternalIdAndWineVariantExternalId(
+            UUID offerExternalId, UUID wineVariantExternalId);
     List<OfferProductEntity> findByOfferExternalId(UUID offerExternalId);
 
     @Query("SELECT op FROM OfferProductEntity op JOIN op.offer o " +
-           "WHERE op.productVariant.externalId = :variantId " +
+           "WHERE op.wineVariant.externalId = :variantId " +
            "AND o.active = true " +
            "AND o.startDate <= CURRENT_TIMESTAMP " +
            "AND o.endDate >= CURRENT_TIMESTAMP")

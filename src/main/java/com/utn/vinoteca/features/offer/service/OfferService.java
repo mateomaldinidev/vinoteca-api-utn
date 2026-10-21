@@ -15,8 +15,8 @@ import com.utn.vinoteca.features.offer_product.dto.OfferProductRequestDTO;
 import com.utn.vinoteca.features.offer_product.entity.OfferProductEntity;
 import com.utn.vinoteca.features.offer_product.mapper.OfferProductMapper;
 import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
-import com.utn.vinoteca.features.productVariant.repository.ProductVariantRepository;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
+import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import com.utn.vinoteca.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class OfferService implements IOfferService {
 
     private final OfferRepository offerRepository;
     private final OfferProductRepository offerProductRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final WineVariantRepository wineVariantRepository;
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final IEmailService emailService;
@@ -62,19 +62,19 @@ public class OfferService implements IOfferService {
         return offerMapper.toResponse(saved);
     }
 
-    // Agregar un producto a una oferta activa, validando que no esté repetido y que el precio con descuento sea menor al original
+    // Agregar un vino a una oferta activa, validando que no esté repetido y que el precio con descuento sea menor al original
     @Override
     @Transactional
     public OfferResponseDTO addProductToOffer(OfferProductRequestDTO dto) {
         OfferEntity offer = offerRepository.findByExternalIdAndActiveTrue(dto.getOfferId())
                 .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: ", dto.getOfferId()));
 
-        ProductVariantEntity variant = productVariantRepository.findByExternalIdAndActiveTrue(dto.getProductVariantId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: ", dto.getProductVariantId()));
+        WineVariantEntity variant = wineVariantRepository.findByExternalIdAndActiveTrue(dto.getWineVariantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Wine variant not found with ID: ", dto.getWineVariantId()));
 
-        if (offerProductRepository.existsByOfferExternalIdAndProductVariantExternalId(
-                dto.getOfferId(), dto.getProductVariantId())) {
-            throw new BusinessRuleException("Product variant is already associated with this offer");
+        if (offerProductRepository.existsByOfferExternalIdAndWineVariantExternalId(
+                dto.getOfferId(), dto.getWineVariantId())) {
+            throw new BusinessRuleException("Wine variant is already associated with this offer");
         }
 
         if (dto.getDiscountedPrice().compareTo(variant.getPrice()) >= 0) {
@@ -87,16 +87,16 @@ public class OfferService implements IOfferService {
         return offerMapper.toResponse(offer);
     }
 
-    // Sacar un producto de una oferta activa
+    // Sacar un vino de una oferta activa
     @Override
     @Transactional
-    public OfferResponseDTO removeProductFromOffer(UUID offerExternalId, UUID productVariantExternalId) {
+    public OfferResponseDTO removeProductFromOffer(UUID offerExternalId, UUID wineVariantExternalId) {
         OfferEntity offer = offerRepository.findByExternalIdAndActiveTrue(offerExternalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Offer not found with ID: ", offerExternalId));
 
         OfferProductEntity offerProduct = offerProductRepository
-                .findByOfferExternalIdAndProductVariantExternalId(offerExternalId, productVariantExternalId)
-                .orElseThrow(() -> new BusinessRuleException("Product variant is not associated with this offer"));
+                .findByOfferExternalIdAndWineVariantExternalId(offerExternalId, wineVariantExternalId)
+                .orElseThrow(() -> new BusinessRuleException("Wine variant is not associated with this offer"));
 
         offer.getOfferProducts().remove(offerProduct);
         offerRepository.save(offer);

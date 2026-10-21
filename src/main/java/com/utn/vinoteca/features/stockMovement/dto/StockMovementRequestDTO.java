@@ -25,6 +25,6 @@ public class StockMovementRequestDTO {
     private String reason;
 
     @NotNull(message = "The variantId cannot be null.")
-    @Schema(description = "External identifier of the product variant", example = "550e8400-e29b-41d4-a716-446655440000")
+    @Schema(description = "External identifier of the wine variant", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID variantId;
 }

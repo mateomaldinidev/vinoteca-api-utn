@@ -1,7 +1,7 @@
 package com.utn.vinoteca.features.cart_item.entity;
 
 import com.utn.vinoteca.features.cart.entity.CartEntity;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name="cart_items", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"cart_id", "product_variant_id"})
+    @UniqueConstraint(columnNames = {"cart_id", "wine_variant_id"})
 })
 public class CartItemEntity {
 
@@ -32,8 +32,8 @@ public class CartItemEntity {
     private CartEntity cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="product_variant_id",nullable = false)
-    private ProductVariantEntity productVariant;
+    @JoinColumn(name="wine_variant_id",nullable = false)
+    private WineVariantEntity wineVariant;
 
     @Column(name="quantity", nullable = false)
     private Integer quantity;

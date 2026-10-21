@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.stockMovement.entity;
 
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +41,6 @@ public class StockMovementEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variantId", nullable = false)
-    private ProductVariantEntity variant;
+    private WineVariantEntity variant;
 
 }

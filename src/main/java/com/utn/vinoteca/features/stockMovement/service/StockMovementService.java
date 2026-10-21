@@ -18,7 +18,7 @@ public class StockMovementService implements IStockMovementService {
     private final StockMovementRepository stockMovementRepository;
     private final StockMovementMapper stockMovementMapper;
 
-    // Los movimientos se crean desde ProductVariantService
+    // Los movimientos se crean desde WineVariantService
     // Este servicio es solo para consulta.
     @Override
     public List<StockMovementResponseDTO> getMovementsByVariant(UUID variantId) {

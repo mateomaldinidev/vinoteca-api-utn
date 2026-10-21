@@ -47,11 +47,11 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(offerService.create(dto));
     }
 
-    @PostMapping("/{offerExternalId}/products")
+    @PostMapping("/{offerExternalId}/wines")
     @PreAuthorize("hasAuthority('OFFER_ADD_PRODUCT')")
-    @Operation(summary = "Agregar producto a oferta", description = "Agrega un producto a una oferta existente")
+    @Operation(summary = "Agregar vino a oferta", description = "Agrega un vino a una oferta existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto agregado",
+            @ApiResponse(responseCode = "200", description = "Vino agregado",
                     content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos",
                     content = @Content),
@@ -67,22 +67,22 @@ public class OfferController {
         return ResponseEntity.ok(offerService.addProductToOffer(dto));
     }
 
-    @DeleteMapping("/{offerExternalId}/products/{productVariantExternalId}")
+    @DeleteMapping("/{offerExternalId}/wines/{wineVariantExternalId}")
     @PreAuthorize("hasAuthority('OFFER_REMOVE_PRODUCT')")
-    @Operation(summary = "Remover producto de oferta", description = "Elimina un producto de una oferta existente")
+    @Operation(summary = "Remover vino de oferta", description = "Elimina un vino de una oferta existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Producto removido",
+            @ApiResponse(responseCode = "200", description = "Vino removido",
                     content = @Content(schema = @Schema(implementation = OfferResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Oferta o producto no encontrado")
+            @ApiResponse(responseCode = "404", description = "Oferta o vino no encontrado")
     })
     public ResponseEntity<OfferResponseDTO> removeProduct(
             @Parameter(description = "ID externo de la oferta") @PathVariable UUID offerExternalId,
-            @Parameter(description = "ID externo de la variante de producto") @PathVariable UUID productVariantExternalId) {
-        return ResponseEntity.ok(offerService.removeProductFromOffer(offerExternalId, productVariantExternalId));
+            @Parameter(description = "ID externo de la variante de vino") @PathVariable UUID wineVariantExternalId) {
+        return ResponseEntity.ok(offerService.removeProductFromOffer(offerExternalId, wineVariantExternalId));
     }
 
     @GetMapping("/{externalId}")

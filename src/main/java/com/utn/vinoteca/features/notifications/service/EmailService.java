@@ -37,7 +37,7 @@ public class EmailService implements IEmailService {
             String body = "Hi " + name + ",\n\n"
                     + "Welcome to Corralon UTN!\n"
                     + "Your account has been created successfully.\n\n"
-                    + "Browse our catalog: " + baseUrl + "/products/search\n\n"
+                    + "Browse our catalog: " + baseUrl + "/wines/search\n\n"
                     + "Thanks,\nCorralon UTN Team";
 
             sendSimpleEmail(to, "Welcome to Corralon UTN", body);
@@ -141,10 +141,10 @@ public class EmailService implements IEmailService {
             body.append("Valid from: ").append(DATE_ONLY.format(offer.startDate())).append(" to ").append(DATE_ONLY.format(offer.endDate())).append("\n\n");
 
             if (offer.offerProducts() != null && !offer.offerProducts().isEmpty()) {
-                body.append("Products included:\n");
-                for (OfferProductResponseDTO product : offer.offerProducts()) {
-                    body.append("  - Product variant: ").append(product.productVariantExternalId())
-                            .append(" | Discounted price: $").append(product.discountedPrice())
+                body.append("Wines included:\n");
+                for (OfferProductResponseDTO wine : offer.offerProducts()) {
+                    body.append("  - Wine variant: ").append(wine.wineVariantExternalId())
+                            .append(" | Discounted price: $").append(wine.discountedPrice())
                             .append("\n");
                 }
             }

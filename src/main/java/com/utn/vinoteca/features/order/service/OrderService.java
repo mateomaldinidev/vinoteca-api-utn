@@ -22,8 +22,8 @@ import com.utn.vinoteca.features.order.mapper.OrderMapper;
 import com.utn.vinoteca.features.order.repository.OrderRepository;
 import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
 import com.utn.vinoteca.features.orderItem.mapper.OrderItemMapper;
-import com.utn.vinoteca.features.productVariant.entity.ProductVariantEntity;
-import com.utn.vinoteca.features.productVariant.repository.ProductVariantRepository;
+import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
+import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
 import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
 import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
 import com.utn.vinoteca.features.stockMovement.repository.StockMovementRepository;
@@ -47,7 +47,7 @@ public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final ProductVariantRepository productVariantRepository;
+    private final WineVariantRepository wineVariantRepository;
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final AddressRepository addressRepository;
@@ -118,10 +118,10 @@ public class OrderService implements IOrderService {
                         .stream()
                         .map(cartItem -> {
 
-                            ProductVariantEntity variant = cartItem.getProductVariant();
+                            WineVariantEntity variant = cartItem.getWineVariant();
 
                             if (!variant.getActive()) {
-                                throw new BusinessRuleException("Product variant is inactive");
+                                throw new BusinessRuleException("Wine variant is inactive");
                             }
 
                             if (variant.getStock() < cartItem.getQuantity()) {
@@ -136,7 +136,7 @@ public class OrderService implements IOrderService {
 
                             // descontar stock
                             variant.setStock(variant.getStock() - cartItem.getQuantity());
-                            productVariantRepository.save(variant);
+                            wineVariantRepository.save(variant);
 
                             // movimiento stock
                             createStockMovement(variant, cartItem.getQuantity(), StockMovementType.SALE, "Stock discounted by order creation");
@@ -276,11 +276,11 @@ public class OrderService implements IOrderService {
 
         for (OrderItemEntity item : order.getItems()) {
 
-            ProductVariantEntity variant = item.getProductVariant();
+            WineVariantEntity variant = item.getWineVariant();
 
             variant.setStock(variant.getStock() + item.getQuantity());
 
-            productVariantRepository.save(variant);
+            wineVariantRepository.save(variant);
 
             createStockMovement(
                     variant,
@@ -291,7 +291,7 @@ public class OrderService implements IOrderService {
         }
     }
 
-    private BigDecimal calculateUnitPrice(ProductVariantEntity variant, Integer quantity) {
+    private BigDecimal calculateUnitPrice(WineVariantEntity variant, Integer quantity) {
 
         BigDecimal offerPrice = offerProductRepository
                 .findActiveOfferForVariant(variant.getExternalId())
@@ -318,7 +318,7 @@ public class OrderService implements IOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", externalId));
     }
 
-    private void createStockMovement(ProductVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
+    private void createStockMovement(WineVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
         StockMovementEntity movement = StockMovementEntity.builder()
                 .movementDate(LocalDateTime.now())
                 .quantity(quantity)

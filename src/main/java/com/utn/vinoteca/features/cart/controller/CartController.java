@@ -68,9 +68,9 @@ public class CartController {
         return ResponseEntity.ok(cartService.getCartByUserId(userId));
     }
 
-    @PatchMapping("/{userId}/items/{productVariantId}")
+    @PatchMapping("/{userId}/items/{wineVariantId}")
     @PreAuthorize("hasAuthority('CART_UPDATE_ITEM_QUANTITY')")
-    @Operation(summary = "Actualizar cantidad de item", description = "Actualiza la cantidad de un producto en el carrito")
+    @Operation(summary = "Actualizar cantidad de item", description = "Actualiza la cantidad de un vino en el carrito")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cantidad actualizada",
                     content = @Content(schema = @Schema(implementation = CartResponseDTO.class))),
@@ -84,9 +84,9 @@ public class CartController {
     })
     public ResponseEntity<CartResponseDTO> updateCartItemQuantity(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId,
-            @Parameter(description = "ID externo de la variante de producto") @PathVariable UUID productVariantId,
+            @Parameter(description = "ID externo de la variante de vino") @PathVariable UUID wineVariantId,
             @Valid @RequestBody CartItemQuantityUpdateDTO updateDTO) {
-        return ResponseEntity.ok(cartService.updateCartItemQuantity(userId, productVariantId, updateDTO));
+        return ResponseEntity.ok(cartService.updateCartItemQuantity(userId, wineVariantId, updateDTO));
     }
 
     @DeleteMapping("/{userId}")

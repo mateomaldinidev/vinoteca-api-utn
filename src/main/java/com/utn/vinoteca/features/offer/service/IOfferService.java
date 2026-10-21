@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface IOfferService {
     OfferResponseDTO create(OfferRequestDTO dto);
     OfferResponseDTO addProductToOffer(OfferProductRequestDTO dto);
-    OfferResponseDTO removeProductFromOffer(UUID offerExternalId, UUID productVariantExternalId);
+    OfferResponseDTO removeProductFromOffer(UUID offerExternalId, UUID wineVariantExternalId);
     OfferResponseDTO getByExternalId(UUID externalId);
     List<OfferResponseDTO> getAllActive();
     List<OfferResponseDTO> getAllInactive();
