@@ -1,8 +1,8 @@
-package com.utn.vinoteca.features.cart_item.mapper;
+package com.utn.vinoteca.features.cartItem.mapper;
 
-import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
-import com.utn.vinoteca.features.cart_item.dto.CartItemResponseDTO;
-import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
+import com.utn.vinoteca.features.cartItem.dto.CartItemRequestDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemResponseDTO;
+import com.utn.vinoteca.features.cartItem.entity.CartItemEntity;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 

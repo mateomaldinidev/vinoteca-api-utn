@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.offer.dto;
 
-import com.utn.vinoteca.features.offer_product.dto.OfferProductResponseDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductResponseDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;

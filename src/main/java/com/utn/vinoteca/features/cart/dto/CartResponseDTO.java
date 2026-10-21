@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.cart.dto;
 
-import com.utn.vinoteca.features.cart_item.dto.CartItemResponseDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemResponseDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

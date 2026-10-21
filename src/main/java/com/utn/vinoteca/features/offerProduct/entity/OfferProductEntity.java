@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.offer_product.entity;
+package com.utn.vinoteca.features.offerProduct.entity;
 
 import com.utn.vinoteca.features.offer.entity.OfferEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;

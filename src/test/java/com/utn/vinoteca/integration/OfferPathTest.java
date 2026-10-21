@@ -4,7 +4,7 @@ import com.utn.vinoteca.exception.BadRequestException;
 import com.utn.vinoteca.features.offer.dto.OfferRequestDTO;
 import com.utn.vinoteca.features.offer.dto.OfferResponseDTO;
 import com.utn.vinoteca.features.offer.service.IOfferService;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductRequestDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductRequestDTO;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;

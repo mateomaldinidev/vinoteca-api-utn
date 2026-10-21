@@ -1,6 +1,6 @@
-package com.utn.vinoteca.features.offer_product.repository;
+package com.utn.vinoteca.features.offerProduct.repository;
 
-import com.utn.vinoteca.features.offer_product.entity.OfferProductEntity;
+import com.utn.vinoteca.features.offerProduct.entity.OfferProductEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

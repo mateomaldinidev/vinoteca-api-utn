@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.cart.dto;
 
-import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemRequestDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;

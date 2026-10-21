@@ -1,7 +1,7 @@
-package com.utn.vinoteca.features.cart_item.repository;
+package com.utn.vinoteca.features.cartItem.repository;
 
 import com.utn.vinoteca.features.cart.entity.CartEntity;
-import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
+import com.utn.vinoteca.features.cartItem.entity.CartItemEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

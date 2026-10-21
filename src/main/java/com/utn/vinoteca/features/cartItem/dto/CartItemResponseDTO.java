@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.cart_item.dto;
+package com.utn.vinoteca.features.cartItem.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

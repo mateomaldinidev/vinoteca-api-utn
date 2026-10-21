@@ -2,7 +2,7 @@ package com.utn.vinoteca.features.offer.service;
 
 import com.utn.vinoteca.features.offer.dto.OfferRequestDTO;
 import com.utn.vinoteca.features.offer.dto.OfferResponseDTO;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductRequestDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductRequestDTO;
 
 import java.util.List;
 import java.util.UUID;

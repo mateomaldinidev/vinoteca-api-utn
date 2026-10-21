@@ -1,9 +1,9 @@
-package com.utn.vinoteca.features.offer_product.mapper;
+package com.utn.vinoteca.features.offerProduct.mapper;
 
 import com.utn.vinoteca.features.offer.entity.OfferEntity;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductRequestDTO;
-import com.utn.vinoteca.features.offer_product.dto.OfferProductResponseDTO;
-import com.utn.vinoteca.features.offer_product.entity.OfferProductEntity;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductRequestDTO;
+import com.utn.vinoteca.features.offerProduct.dto.OfferProductResponseDTO;
+import com.utn.vinoteca.features.offerProduct.entity.OfferProductEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;

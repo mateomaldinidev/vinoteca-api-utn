@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.cart_item.entity;
+package com.utn.vinoteca.features.cartItem.entity;
 
 import com.utn.vinoteca.features.cart.entity.CartEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;

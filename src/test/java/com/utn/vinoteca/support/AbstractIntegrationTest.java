@@ -8,7 +8,7 @@ import com.utn.vinoteca.security.repository.RolesRepository;
 import com.utn.vinoteca.features.cart.dto.CartRequestDTO;
 import com.utn.vinoteca.features.cart.repository.CartRepository;
 import com.utn.vinoteca.features.cart.service.ICartService;
-import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemRequestDTO;
 import com.utn.vinoteca.features.distributor.entity.DistributorEntity;
 import com.utn.vinoteca.features.distributor.repository.DistributorRepository;
 import com.utn.vinoteca.features.notifications.service.IEmailService;

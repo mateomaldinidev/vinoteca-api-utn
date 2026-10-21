@@ -3,7 +3,7 @@ package com.utn.vinoteca.features.cart.controller;
 import com.utn.vinoteca.features.cart.dto.CartRequestDTO;
 import com.utn.vinoteca.features.cart.dto.CartResponseDTO;
 import com.utn.vinoteca.features.cart.service.ICartService;
-import com.utn.vinoteca.features.cart_item.dto.CartItemQuantityUpdateDTO;
+import com.utn.vinoteca.features.cartItem.dto.CartItemQuantityUpdateDTO;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
 import io.swagger.v3.oas.annotations.Operation;
