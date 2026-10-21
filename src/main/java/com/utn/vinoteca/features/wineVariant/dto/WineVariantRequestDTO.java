@@ -15,7 +15,7 @@ import java.util.UUID;
 public class WineVariantRequestDTO {
     @NotBlank(message = "Attribute is required")
     @Size(max = 255, message = "Attribute must be less than 255 characters")
-    @Schema(description = "Variant attribute (e.g. color, size, weight)", example = "Bolsa 50kg")
+    @Schema(description = "Variant attribute (e.g. bottle size, packaging)", example = "Botella 750 ml")
     private String attribute;
 
     @NotNull(message = "Price is required")

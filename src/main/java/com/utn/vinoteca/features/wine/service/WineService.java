@@ -47,9 +47,9 @@ public class WineService implements IWineService{
         }
 
         WineTypeEntity wineType = wineTypeRepository.findByExternalId(wineRequestDTO.getWineTypeId())
-                        .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", wineRequestDTO.getWineTypeId()));
+                        .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", wineRequestDTO.getWineTypeId()));
         if(!wineType.getActive()){
-            throw new BusinessRuleException("Cannot assign inactive wineType");
+            throw new BusinessRuleException("Cannot assign an inactive wine type");
         }
         WineryEntity winery =
                 wineryRepository.findByExternalId(wineRequestDTO.getWineryId())
@@ -88,10 +88,10 @@ public class WineService implements IWineService{
         }
 
         WineTypeEntity wineType = wineTypeRepository.findByExternalId(wineRequestDTO.getWineTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", wineRequestDTO.getWineTypeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", wineRequestDTO.getWineTypeId()));
 
         if (!wineType.getActive()) {
-            throw new BusinessRuleException("Cannot assign inactive wineType");
+            throw new BusinessRuleException("Cannot assign an inactive wine type");
         }
 
         WineryEntity winery = wineryRepository.findByExternalId(wineRequestDTO.getWineryId())

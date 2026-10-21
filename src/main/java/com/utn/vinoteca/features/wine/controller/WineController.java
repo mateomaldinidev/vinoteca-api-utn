@@ -132,9 +132,9 @@ public class WineController {
     })
     public ResponseEntity<List<WineResponseDTO>> search(
             @Parameter(description = "Nombre del vino") @RequestParam(required = false) String name,
-            @Parameter(description = "ID del proveedor") @RequestParam(required = false) UUID distributorId,
-            @Parameter(description = "ID de la categoria") @RequestParam(required = false) UUID wineTypeId,
-            @Parameter(description = "ID de la marca") @RequestParam(required = false) UUID wineryId
+            @Parameter(description = "ID del distribuidor") @RequestParam(required = false) UUID distributorId,
+            @Parameter(description = "ID del tipo de vino") @RequestParam(required = false) UUID wineTypeId,
+            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId
     ) {
         return ResponseEntity
                 .status(200)
@@ -152,9 +152,9 @@ public class WineController {
     })
     public ResponseEntity<List<WineResponseDTO>> getInactive(
             @Parameter(description = "Nombre del vino") @RequestParam(required = false) String name,
-            @Parameter(description = "ID del proveedor") @RequestParam(required = false) UUID distributorId,
-            @Parameter(description = "ID de la categoria") @RequestParam(required = false) UUID wineTypeId,
-            @Parameter(description = "ID de la marca") @RequestParam(required = false) UUID wineryId) {
+            @Parameter(description = "ID del distribuidor") @RequestParam(required = false) UUID distributorId,
+            @Parameter(description = "ID del tipo de vino") @RequestParam(required = false) UUID wineTypeId,
+            @Parameter(description = "ID de la bodega") @RequestParam(required = false) UUID wineryId) {
 
         return ResponseEntity
                 .status(HttpStatus.OK)

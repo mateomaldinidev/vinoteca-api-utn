@@ -13,7 +13,7 @@ import lombok.*;
 @Builder
 public class UserRequestDTO {
     @NotBlank
-    @Schema(description = "User email address", example = "usuario@corralon.com")
+    @Schema(description = "User email address", example = "usuario@vinoteca.com")
     private String email;
 
     @NotBlank

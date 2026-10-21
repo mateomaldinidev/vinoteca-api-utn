@@ -14,7 +14,7 @@ public class WineDeleteResponseDTO {
     @Schema(description = "Unique external identifier of the wine", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID wineExternalId;
 
-    @Schema(description = "Wine name", example = "Cemento Portland 50kg")
+    @Schema(description = "Wine name", example = "Malbec Reserva")
     private String wineName;
 
     @Schema(description = "Indicates if the wine is active", example = "false")

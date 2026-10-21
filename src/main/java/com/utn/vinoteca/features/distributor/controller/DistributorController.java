@@ -24,16 +24,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/distributors")
 @RequiredArgsConstructor
-@Tag(name = "Distributors", description = "Endpoints para la gestion de proveedores")
+@Tag(name = "Distributors", description = "Endpoints para la gestion de distribuidores")
 public class DistributorController {
 
     private final IDistributorService distributorService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('DISTRIBUTOR_CREATE')")
-    @Operation(summary = "Crear proveedor", description = "Crea un nuevo proveedor")
+    @Operation(summary = "Crear distribuidor", description = "Crea un nuevo distribuidor")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Proveedor creado exitosamente",
+            @ApiResponse(responseCode = "201", description = "Distribuidor creado exitosamente",
                     content = @Content(schema = @Schema(implementation = DistributorResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos",
                     content = @Content),
@@ -48,9 +48,9 @@ public class DistributorController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('DISTRIBUTOR_LIST')")
-    @Operation(summary = "Listar proveedores activos", description = "Retorna todos los proveedores activos")
+    @Operation(summary = "Listar distribuidores activos", description = "Retorna todos los distribuidores activos")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedores encontrados",
+            @ApiResponse(responseCode = "200", description = "Distribuidores encontrados",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = DistributorResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
@@ -63,26 +63,26 @@ public class DistributorController {
 
     @GetMapping("/{externalId}")
     @PreAuthorize("hasAuthority('DISTRIBUTOR_READ')")
-    @Operation(summary = "Obtener proveedor por ID", description = "Retorna un proveedor activo por su externalId")
+    @Operation(summary = "Obtener distribuidor por ID", description = "Retorna un distribuidor activo por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedor encontrado",
+            @ApiResponse(responseCode = "200", description = "Distribuidor encontrado",
                     content = @Content(schema = @Schema(implementation = DistributorResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+            @ApiResponse(responseCode = "404", description = "Distribuidor no encontrado")
     })
     public ResponseEntity<DistributorResponseDTO> getByExternalId(
-            @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo del distribuidor") @PathVariable UUID externalId) {
         return ResponseEntity.ok(distributorService.getByExternalId(externalId));
     }
 
     @PutMapping("/{externalId}")
     @PreAuthorize("hasAuthority('DISTRIBUTOR_UPDATE')")
-    @Operation(summary = "Actualizar proveedor", description = "Actualiza los datos de un proveedor existente")
+    @Operation(summary = "Actualizar distribuidor", description = "Actualiza los datos de un distribuidor existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedor actualizado",
+            @ApiResponse(responseCode = "200", description = "Distribuidor actualizado",
                     content = @Content(schema = @Schema(implementation = DistributorResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos",
                     content = @Content),
@@ -90,53 +90,53 @@ public class DistributorController {
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+            @ApiResponse(responseCode = "404", description = "Distribuidor no encontrado")
     })
     public ResponseEntity<DistributorResponseDTO> update(
-            @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId,
+            @Parameter(description = "ID externo del distribuidor") @PathVariable UUID externalId,
             @RequestBody @Valid DistributorRequestDTO dto) {
         return ResponseEntity.ok(distributorService.update(externalId, dto));
     }
 
     @DeleteMapping("/{externalId}")
     @PreAuthorize("hasAuthority('DISTRIBUTOR_DELETE')")
-    @Operation(summary = "Eliminar proveedor", description = "Eliminacion logica de un proveedor")
+    @Operation(summary = "Eliminar distribuidor", description = "Eliminacion logica de un distribuidor")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Proveedor eliminado"),
+            @ApiResponse(responseCode = "204", description = "Distribuidor eliminado"),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+            @ApiResponse(responseCode = "404", description = "Distribuidor no encontrado")
     })
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo del distribuidor") @PathVariable UUID externalId) {
         distributorService.delete(externalId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('DISTRIBUTOR_ACTIVATE')")
-    @Operation(summary = "Activar proveedor", description = "Activa un proveedor previamente desactivado")
+    @Operation(summary = "Activar distribuidor", description = "Activa un distribuidor previamente desactivado")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Proveedor activado"),
+            @ApiResponse(responseCode = "204", description = "Distribuidor activado"),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+            @ApiResponse(responseCode = "404", description = "Distribuidor no encontrado")
     })
     public ResponseEntity<Void> activate(
-            @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo del distribuidor") @PathVariable UUID externalId) {
         distributorService.activate(externalId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('DISTRIBUTOR_LIST_INACTIVE')")
-    @Operation(summary = "Listar proveedores inactivos", description = "Retorna todos los proveedores inactivos")
+    @Operation(summary = "Listar distribuidores inactivos", description = "Retorna todos los distribuidores inactivos")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Proveedores inactivos encontrados",
+            @ApiResponse(responseCode = "200", description = "Distribuidores inactivos encontrados",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = DistributorResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),

@@ -218,7 +218,7 @@ public class WineVariantService implements IWineVariantService {
     }
 
 
-    //metodo interno para vuscar la variante
+    //metodo interno para vuscar el formato
     private WineVariantEntity getActiveVariant(UUID variantId) {
         return wineVariantRepository.findByExternalIdAndActiveTrue(variantId)
                 .orElseThrow(() ->

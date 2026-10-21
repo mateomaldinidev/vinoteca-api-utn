@@ -17,11 +17,11 @@ public class DistributorResponseDTO{
     private UUID externalId;
 
     @NotBlank
-    @Schema(description = "Distributor name", example = "Proveedores S.A.")
+    @Schema(description = "Distributor name", example = "Distribuidora del Oeste")
     private String name;
 
     @NotBlank
-    @Schema(description = "Distributor contact information", example = "contacto@proveedores.com")
+    @Schema(description = "Distributor contact information", example = "contacto@distribuidores.com")
     private String contact;
 
     @NotBlank

@@ -24,15 +24,15 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/wineries")
 @RequiredArgsConstructor
-@Tag(name = "Wineries", description = "Endpoints para la gestion de marcas")
+@Tag(name = "Wineries", description = "Endpoints para la gestion de bodegas")
 public class WineryController {
     private final IWineryService wineryService;
 
     @PostMapping
     @PreAuthorize("hasAuthority('WINERY_CREATE')")
-    @Operation(summary = "Crear marca", description = "Crea una nueva marca")
+    @Operation(summary = "Crear bodega", description = "Crea una nueva bodega")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Marca creada exitosamente",
+            @ApiResponse(responseCode = "201", description = "Bodega creada exitosamente",
                     content = @Content(schema = @Schema(implementation = WineryResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos",
                     content = @Content),
@@ -47,9 +47,9 @@ public class WineryController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('WINERY_LIST')")
-    @Operation(summary = "Listar marcas activas", description = "Retorna todas las marcas activas")
+    @Operation(summary = "Listar bodegas activas", description = "Retorna todas las bodegas activas")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Marcas encontradas",
+            @ApiResponse(responseCode = "200", description = "Bodegas encontradas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = WineryResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
@@ -62,26 +62,26 @@ public class WineryController {
 
     @GetMapping("/{externalId}")
     @PreAuthorize("hasAuthority('WINERY_READ')")
-    @Operation(summary = "Obtener marca por ID", description = "Retorna una marca activa por su externalId")
+    @Operation(summary = "Obtener bodega por ID", description = "Retorna una bodega activa por su externalId")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Marca encontrada",
+            @ApiResponse(responseCode = "200", description = "Bodega encontrada",
                     content = @Content(schema = @Schema(implementation = WineryResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Marca no encontrada")
+            @ApiResponse(responseCode = "404", description = "Bodega no encontrada")
     })
     public ResponseEntity<WineryResponseDTO> getByExternalId(
-            @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo de la bodega") @PathVariable UUID externalId) {
         return ResponseEntity.ok(wineryService.getByExternalId(externalId));
     }
 
     @PutMapping("/{externalId}")
     @PreAuthorize("hasAuthority('WINERY_UPDATE')")
-    @Operation(summary = "Actualizar marca", description = "Actualiza los datos de una marca existente")
+    @Operation(summary = "Actualizar bodega", description = "Actualiza los datos de una bodega existente")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Marca actualizada",
+            @ApiResponse(responseCode = "200", description = "Bodega actualizada",
                     content = @Content(schema = @Schema(implementation = WineryResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos invalidos",
                     content = @Content),
@@ -89,53 +89,53 @@ public class WineryController {
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Marca no encontrada")
+            @ApiResponse(responseCode = "404", description = "Bodega no encontrada")
     })
     public ResponseEntity<WineryResponseDTO> update(
-            @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId,
+            @Parameter(description = "ID externo de la bodega") @PathVariable UUID externalId,
             @RequestBody @Valid WineryRequestDTO dto) {
         return ResponseEntity.ok(wineryService.update(externalId, dto));
     }
 
     @DeleteMapping("/{externalId}")
     @PreAuthorize("hasAuthority('WINERY_DELETE')")
-    @Operation(summary = "Eliminar marca", description = "Eliminacion logica de una marca")
+    @Operation(summary = "Eliminar bodega", description = "Eliminacion logica de una bodega")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Marca eliminada"),
+            @ApiResponse(responseCode = "204", description = "Bodega eliminada"),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Marca no encontrada")
+            @ApiResponse(responseCode = "404", description = "Bodega no encontrada")
     })
     public ResponseEntity<Void> delete(
-            @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo de la bodega") @PathVariable UUID externalId) {
         wineryService.delete(externalId);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{externalId}/activate")
     @PreAuthorize("hasAuthority('WINERY_ACTIVATE')")
-    @Operation(summary = "Activar marca", description = "Activa una marca previamente desactivada")
+    @Operation(summary = "Activar bodega", description = "Activa una bodega previamente desactivada")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Marca activada"),
+            @ApiResponse(responseCode = "204", description = "Bodega activada"),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
             @ApiResponse(responseCode = "403", description = "No autorizado",
                     content = @Content),
-            @ApiResponse(responseCode = "404", description = "Marca no encontrada")
+            @ApiResponse(responseCode = "404", description = "Bodega no encontrada")
     })
     public ResponseEntity<Void> activate(
-            @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId) {
+            @Parameter(description = "ID externo de la bodega") @PathVariable UUID externalId) {
         wineryService.activate(externalId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('WINERY_LIST_INACTIVE')")
-    @Operation(summary = "Listar marcas inactivas", description = "Retorna todas las marcas inactivas")
+    @Operation(summary = "Listar bodegas inactivas", description = "Retorna todas las bodegas inactivas")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Marcas inactivas encontradas",
+            @ApiResponse(responseCode = "200", description = "Bodegas inactivas encontradas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = WineryResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),

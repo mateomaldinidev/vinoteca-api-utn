@@ -23,10 +23,10 @@ public class CartItemResponseDTO {
     @Schema(description = "External identifier of the wine variant", example = "550e8400-e29b-41d4-a716-446655440002")
     private UUID wineVariantExternalId;
 
-    @Schema(description = "Name of the wine", example = "Cemento Portland 50kg") // <-- Nuevo
+    @Schema(description = "Name of the wine", example = "Malbec Reserva") // <-- Nuevo
     private String wineName; // <-- Nuevo
 
-    @Schema(description = "Attribute of the wine variant", example = "Bolsa 50kg") // <-- Nuevo
+    @Schema(description = "Attribute of the wine variant", example = "Botella 750 ml") // <-- Nuevo
     private String variantAttribute; // <-- Nuevo
 
     @Schema(description = "Unit price of the wine variant", example = "1500.00") // <-- Nuevo

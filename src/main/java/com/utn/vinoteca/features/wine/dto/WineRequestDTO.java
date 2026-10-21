@@ -17,19 +17,19 @@ public class WineRequestDTO {
 
     @NotBlank(message = "Name is required")
     @Size(max = 255, message = "Name must be less than 255 characters")
-    @Schema(description = "Wine name", example = "Cemento Portland 50kg")
+    @Schema(description = "Wine name", example = "Malbec Reserva")
     private String name;
 
     @Size(max = 255, message = "Description must be less than 255 characters")
-    @Schema(description = "Wine description", example = "Cemento Portland de alta resistencia para construcción")
+    @Schema(description = "Wine description", example = "Malbec de guarda con notas de frutos rojos")
     private String description;
 
     @NotNull(message = "Distributor is required")
     @Schema(description = "External identifier of the distributor", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID distributorId;
 
-    @NotNull(message = "WineType is required")
-    @Schema(description = "External identifier of the wineType", example = "550e8400-e29b-41d4-a716-446655440002")
+    @NotNull(message = "Wine type is required")
+    @Schema(description = "External identifier of the wine type", example = "550e8400-e29b-41d4-a716-446655440002")
     private UUID wineTypeId;
 
     @NotNull(message = "Winery is required")

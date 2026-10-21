@@ -28,7 +28,7 @@ public class StockMovementController {
 
     @GetMapping("/variant/{variantId}")
     @PreAuthorize("hasAuthority('STOCK_MOVEMENT_LIST_BY_VARIANT')")
-    @Operation(summary = "Obtener movimientos por variante", description = "Retorna todos los movimientos de stock de una variante de vino")
+    @Operation(summary = "Obtener movimientos por formato", description = "Retorna todos los movimientos de stock de un formato de vino")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Movimientos encontrados",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = StockMovementResponseDTO.class)))),
@@ -38,7 +38,7 @@ public class StockMovementController {
                     content = @Content)
     })
     public ResponseEntity<List<StockMovementResponseDTO>> getMovementsByVariant(
-            @Parameter(description = "ID externo de la variante de vino") @PathVariable UUID variantId) {
+            @Parameter(description = "ID externo del formato de vino") @PathVariable UUID variantId) {
         return ResponseEntity.ok(stockMovementService.getMovementsByVariant(variantId));
     }
 

@@ -21,7 +21,7 @@ public class EmailService implements IEmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:noreply@corralonutn.com}")
+    @Value("${spring.mail.username:noreply@vinoteca.com}")
     private String fromEmail;
 
     @Value("${app.base-url}")
@@ -35,12 +35,12 @@ public class EmailService implements IEmailService {
     public void sendWelcomeEmail(String to, String name) {
         try {
             String body = "Hi " + name + ",\n\n"
-                    + "Welcome to Corralon UTN!\n"
+                    + "Welcome to Vinoteca UTN!\n"
                     + "Your account has been created successfully.\n\n"
                     + "Browse our catalog: " + baseUrl + "/wines/search\n\n"
-                    + "Thanks,\nCorralon UTN Team";
+                    + "Thanks,\nVinoteca UTN Team";
 
-            sendSimpleEmail(to, "Welcome to Corralon UTN", body);
+            sendSimpleEmail(to, "Welcome to Vinoteca UTN", body);
         } catch (Exception e) {
             log.error("Failed to send welcome email to {}: {}", to, e.getMessage());
         }
@@ -54,7 +54,7 @@ public class EmailService implements IEmailService {
                     + "Your password has been changed successfully.\n"
                     + "Date: " + DATE_FMT.format(java.time.LocalDateTime.now()) + "\n\n"
                     + "If you did not request this change, please contact support immediately.\n\n"
-                    + "Thanks,\nCorralon UTN Team";
+                    + "Thanks,\nVinoteca UTN Team";
 
             sendSimpleEmail(to, "Your password has been changed", body);
         } catch (Exception e) {
@@ -85,7 +85,7 @@ public class EmailService implements IEmailService {
             }
 
             body.append("\nTotal: $").append(order.getTotal()).append("\n\n");
-            body.append("Thanks,\nCorralon UTN Team");
+            body.append("Thanks,\nVinoteca UTN Team");
 
             sendSimpleEmail(to, "Order created - #" + orderId, body.toString());
         } catch (Exception e) {
@@ -103,7 +103,7 @@ public class EmailService implements IEmailService {
                     + "Your order #" + orderId + " status has been updated.\n\n"
                     + "New status: " + newStatus + "\n"
                     + "Total: $" + order.getTotal() + "\n\n"
-                    + "Thanks,\nCorralon UTN Team";
+                    + "Thanks,\nVinoteca UTN Team";
 
             sendSimpleEmail(to, "Order status updated - #" + orderId, body);
         } catch (Exception e) {
@@ -122,7 +122,7 @@ public class EmailService implements IEmailService {
                     + "Reason: " + (reason != null ? reason : "No reason provided") + "\n"
                     + "Total: $" + order.getTotal() + "\n\n"
                     + "If you have any questions, please contact support.\n\n"
-                    + "Thanks,\nCorralon UTN Team";
+                    + "Thanks,\nVinoteca UTN Team";
 
             sendSimpleEmail(to, "Order cancelled - #" + orderId, body);
         } catch (Exception e) {
@@ -149,7 +149,7 @@ public class EmailService implements IEmailService {
                 }
             }
 
-            body.append("\nThanks,\nCorralon UTN Team");
+            body.append("\nThanks,\nVinoteca UTN Team");
 
             sendSimpleEmail(to, "New promotion: " + offer.name(), body.toString());
         } catch (Exception e) {

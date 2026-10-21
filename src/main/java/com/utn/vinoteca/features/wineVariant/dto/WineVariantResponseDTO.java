@@ -16,7 +16,7 @@ public class WineVariantResponseDTO {
     @Schema(description = "Unique external identifier of the wine variant", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID externalId;
 
-    @Schema(description = "Variant attribute (e.g. color, size, weight)", example = "Bolsa 50kg")
+    @Schema(description = "Variant attribute (e.g. bottle size, packaging)", example = "Botella 750 ml")
     private String attribute;
 
     @Schema(description = "Selling price of the variant", example = "1500.00")
@@ -37,6 +37,6 @@ public class WineVariantResponseDTO {
     @Schema(description = "External identifier of the wine", example = "550e8400-e29b-41d4-a716-446655440001")
     private UUID wineId;
 
-    @Schema(description = "Wine name", example = "Cemento Portland 50kg")
+    @Schema(description = "Wine name", example = "Malbec Reserva")
     private String wineName;
 }

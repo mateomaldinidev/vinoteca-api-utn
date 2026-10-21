@@ -12,6 +12,6 @@ public class DisabledVariantDTO {
     @Schema(description = "Unique external identifier of the disabled variant", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID externalId;
 
-    @Schema(description = "Variant attribute (e.g. color, size, weight)", example = "Bolsa 50kg")
+    @Schema(description = "Variant attribute (e.g. bottle size, packaging)", example = "Botella 750 ml")
     private String attribute;
 }

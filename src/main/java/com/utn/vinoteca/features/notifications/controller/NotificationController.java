@@ -98,7 +98,7 @@ public class NotificationController {
 
     @PatchMapping("/user/{userId}/read-all")
     @PreAuthorize("hasAuthority('NOTIFICATION_MARK_ALL_AS_READ')")
-    @Operation(summary = "Marcar todas como leidas", description = "Marca todas las notificaciones de un usuario como leidas")
+    @Operation(summary = "Marcar todas como leidas", description = "Bodega todas las notificaciones de un usuario como leidas")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Todas las notificaciones marcadas como leidas"),
             @ApiResponse(responseCode = "401", description = "No autenticado",

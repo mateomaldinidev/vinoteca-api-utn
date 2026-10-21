@@ -13,7 +13,7 @@ import lombok. *;
 public class WineTypeRequestDTO {
     @NotBlank(message = "Name is required")
     @Size(max = 255, message = "Name must be less than 255 characters")
-    @Schema(description = "WineType name", example = "Cementos")
+    @Schema(description = "Wine type name", example = "Tintos")
     private String name;
 
     @Schema(description = "Indicates if the wineType is active", example = "true")

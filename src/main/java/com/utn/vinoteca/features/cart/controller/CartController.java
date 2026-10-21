@@ -84,7 +84,7 @@ public class CartController {
     })
     public ResponseEntity<CartResponseDTO> updateCartItemQuantity(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId,
-            @Parameter(description = "ID externo de la variante de vino") @PathVariable UUID wineVariantId,
+            @Parameter(description = "ID externo del formato de vino") @PathVariable UUID wineVariantId,
             @Valid @RequestBody CartItemQuantityUpdateDTO updateDTO) {
         return ResponseEntity.ok(cartService.updateCartItemQuantity(userId, wineVariantId, updateDTO));
     }

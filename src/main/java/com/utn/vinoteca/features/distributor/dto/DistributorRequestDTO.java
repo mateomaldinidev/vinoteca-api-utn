@@ -14,12 +14,12 @@ public class DistributorRequestDTO {
 
     @NotBlank(message = "Name is required")
     @Size(max = 255, message = "Name must be less than 255 characters")
-    @Schema(description = "Distributor name", example = "Proveedores S.A.")
+    @Schema(description = "Distributor name", example = "Distribuidora del Oeste")
     private String name;
 
     @NotBlank(message = "Contact is required")
     @Size(max = 255, message = "Contact must be less than 255 characters")
-    @Schema(description = "Distributor contact information", example = "contacto@proveedores.com")
+    @Schema(description = "Distributor contact information", example = "contacto@distribuidores.com")
     private String contact;
 
     @Schema(description = "Indicates if the distributor is active", example = "true")

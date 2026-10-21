@@ -47,7 +47,7 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(offerService.create(dto));
     }
 
-    @PostMapping("/{offerExternalId}/wines")
+    @PostMapping("/{offerExternalId}/products")
     @PreAuthorize("hasAuthority('OFFER_ADD_PRODUCT')")
     @Operation(summary = "Agregar vino a oferta", description = "Agrega un vino a una oferta existente")
     @ApiResponses({
@@ -67,7 +67,7 @@ public class OfferController {
         return ResponseEntity.ok(offerService.addProductToOffer(dto));
     }
 
-    @DeleteMapping("/{offerExternalId}/wines/{wineVariantExternalId}")
+    @DeleteMapping("/{offerExternalId}/products/{wineVariantExternalId}")
     @PreAuthorize("hasAuthority('OFFER_REMOVE_PRODUCT')")
     @Operation(summary = "Remover vino de oferta", description = "Elimina un vino de una oferta existente")
     @ApiResponses({
@@ -81,7 +81,7 @@ public class OfferController {
     })
     public ResponseEntity<OfferResponseDTO> removeProduct(
             @Parameter(description = "ID externo de la oferta") @PathVariable UUID offerExternalId,
-            @Parameter(description = "ID externo de la variante de vino") @PathVariable UUID wineVariantExternalId) {
+            @Parameter(description = "ID externo del formato de vino") @PathVariable UUID wineVariantExternalId) {
         return ResponseEntity.ok(offerService.removeProductFromOffer(offerExternalId, wineVariantExternalId));
     }
 

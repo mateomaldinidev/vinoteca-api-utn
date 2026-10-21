@@ -46,14 +46,14 @@ public class WineTypeService implements IWineTypeService {
     public WineTypeResponseDTO getByExternalId(UUID externalId) {
         return wineTypeRepository.findByExternalIdAndActiveTrue(externalId)
                 .map(wineTypeMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", externalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", externalId));
     }
 
     @Override
     @Transactional
     public WineTypeResponseDTO update(UUID externalId, WineTypeRequestDTO dto) {
         WineTypeEntity entity = wineTypeRepository.findByExternalIdAndActiveTrue(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", externalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", externalId));
 
         if (wineTypeRepository.existsByNameAndActiveTrue(dto.getName()) &&
             !entity.getName().equalsIgnoreCase(dto.getName())) {
@@ -69,7 +69,7 @@ public class WineTypeService implements IWineTypeService {
     @Transactional
     public void delete(UUID externalId) {
         WineTypeEntity entity = wineTypeRepository.findByExternalIdAndActiveTrue(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", externalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", externalId));
         entity.setActive(false);
         wineTypeRepository.save(entity);
     }
@@ -78,7 +78,7 @@ public class WineTypeService implements IWineTypeService {
     @Transactional
     public void activate(UUID externalId) {
         WineTypeEntity entity = wineTypeRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("WineType not found with ID: ", externalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", externalId));
 
         if (entity.getActive()) {
             throw new BusinessRuleException("WineType with ID: " + externalId + " is already active.");

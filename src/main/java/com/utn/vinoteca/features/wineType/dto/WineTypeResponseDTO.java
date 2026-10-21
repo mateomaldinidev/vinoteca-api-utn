@@ -17,7 +17,7 @@ public class WineTypeResponseDTO{
     private UUID externalId;
 
     @NotBlank
-    @Schema(description = "WineType name", example = "Cementos")
+    @Schema(description = "Wine type name", example = "Tintos")
     private String name;
 
     @NotBlank

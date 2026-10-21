@@ -24,7 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/wine-types")
 @RequiredArgsConstructor
-@Tag(name = "Wine Types", description = "Endpoints para la gestion de categorias")
+@Tag(name = "Wine Types", description = "Endpoints para la gestion de tipos")
 public class WineTypeController {
 
     private final IWineTypeService wineTypeService;
@@ -48,9 +48,9 @@ public class WineTypeController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('WINE_TYPE_LIST')")
-    @Operation(summary = "Listar categorias activas", description = "Retorna todas las categorias activas")
+    @Operation(summary = "Listar tipos activas", description = "Retorna todas las tipos activas")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Categorias encontradas",
+            @ApiResponse(responseCode = "200", description = "Tipos encontradas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = WineTypeResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),
@@ -134,9 +134,9 @@ public class WineTypeController {
 
     @GetMapping("/inactive")
     @PreAuthorize("hasAuthority('WINE_TYPE_LIST_INACTIVE')")
-    @Operation(summary = "Listar categorias inactivas", description = "Retorna todas las categorias inactivas")
+    @Operation(summary = "Listar tipos inactivas", description = "Retorna todas las tipos inactivas")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Categorias inactivas encontradas",
+            @ApiResponse(responseCode = "200", description = "Tipos inactivas encontradas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = WineTypeResponseDTO.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado",
                     content = @Content),

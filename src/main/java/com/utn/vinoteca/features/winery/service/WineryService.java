@@ -54,7 +54,7 @@ public class WineryService implements IWineryService {
         WineryEntity entity = wineryRepository.findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Winery not found with ID: ", externalId));
 
-        // Validar si el nuevo nombre ya existe en otra marca activa
+        // Validar si el nuevo nombre ya existe en otra bodega activa
         if (wineryRepository.existsByNameAndActiveTrue(dto.getName()) &&
                 !entity.getName().equalsIgnoreCase(dto.getName())) { // Solo si el nombre cambió y ya existe
             throw new BusinessRuleException("Winery with name '" + dto.getName() + "' already exists.");
