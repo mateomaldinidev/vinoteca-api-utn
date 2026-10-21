@@ -2,6 +2,11 @@ spring:
   application:
     name: vinoteca
 
+  config:
+    # Carga el .env local como archivo de propiedades. Es opcional para que
+    # Docker y los tests funcionen sin ese archivo (las variables llegan por entorno).
+    import: optional:file:.env[.properties]
+
   datasource:
     # Los valores por defecto (:localhost, :3306, etc.) se usan solo
     # si se corre la app local con mvn spring-boot:run.
