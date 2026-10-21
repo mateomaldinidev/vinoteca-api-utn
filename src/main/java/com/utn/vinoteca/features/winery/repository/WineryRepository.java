@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface WineryRepository extends JpaRepository<WineryEntity, Long> {
 
     Optional<WineryEntity> findByExternalId(UUID externalId);
+    Optional<WineryEntity> findByName(String name);
     boolean existsByName(String name);
 
     // Nuevos metodos para consistencia con el campo 'active'

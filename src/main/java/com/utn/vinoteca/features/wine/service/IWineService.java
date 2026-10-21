@@ -10,11 +10,23 @@ import java.util.UUID;
 
 public interface IWineService {
     WineResponseDTO getById(UUID externalId);
-    List<WineResponseDTO> search(String name, UUID distributorId, UUID wineTypeId, UUID wineryId);
+    List<WineResponseDTO> search(String name,
+                                 UUID distributorId,
+                                 UUID wineTypeId,
+                                 UUID wineryId,
+                                 UUID grapeVarietyId,
+                                 Integer vintage,
+                                 String region);
     WineResponseDTO create(WineRequestDTO wineRequestDTO);
     WineResponseDTO update(UUID externalId,
                               WineRequestDTO wineRequestDTO);
     WineDeleteResponseDTO delete(UUID externalId);
     void activate(UUID externalId);
-    List<WineResponseDTO> getInactive(String name, UUID distributorId, UUID wineTypeId, UUID wineryId);
+    List<WineResponseDTO> getInactive(String name,
+                                      UUID distributorId,
+                                      UUID wineTypeId,
+                                      UUID wineryId,
+                                      UUID grapeVarietyId,
+                                      Integer vintage,
+                                      String region);
 }

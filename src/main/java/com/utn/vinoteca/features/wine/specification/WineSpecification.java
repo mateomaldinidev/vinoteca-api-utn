@@ -9,7 +9,7 @@ public class WineSpecification {
 
     public static Specification<WineEntity> hasName(String name) {
         return (root, query, criteriaBuilder) -> {
-            if(name == null || name.isBlank()) {
+            if (name == null || name.isBlank()) {
                 return null;
             }
             return criteriaBuilder.like(
@@ -21,7 +21,7 @@ public class WineSpecification {
 
     public static Specification<WineEntity> isActive(Boolean active) {
         return (root, query, criteriaBuilder) -> {
-            if(active == null) {
+            if (active == null) {
                 return null;
             }
             return criteriaBuilder.equal(
@@ -37,7 +37,7 @@ public class WineSpecification {
                 return null;
             }
             return criteriaBuilder.equal(
-                    root.get("wineType").get("externalId"),wineTypeId
+                    root.get("wineType").get("externalId"), wineTypeId
             );
         };
     }
@@ -48,7 +48,7 @@ public class WineSpecification {
                 return null;
             }
             return criteriaBuilder.equal(
-                    root.get("distributor").get("externalId"),distributorId
+                    root.get("distributor").get("externalId"), distributorId
             );
         };
     }
@@ -59,7 +59,44 @@ public class WineSpecification {
                 return null;
             }
             return criteriaBuilder.equal(
-                    root.get("winery").get("externalId"),wineryId
+                    root.get("winery").get("externalId"), wineryId
+            );
+        };
+    }
+
+    public static Specification<WineEntity> hasGrapeVariety(UUID grapeVarietyId) {
+        return (root, query, criteriaBuilder) -> {
+            if (grapeVarietyId == null) {
+                return null;
+            }
+            if (query != null) {
+                query.distinct(true);
+            }
+            return criteriaBuilder.equal(
+                    root.join("grapeVarieties").get("externalId"), grapeVarietyId
+            );
+        };
+    }
+
+    public static Specification<WineEntity> hasVintage(Integer vintage) {
+        return (root, query, criteriaBuilder) -> {
+            if (vintage == null) {
+                return null;
+            }
+            return criteriaBuilder.equal(
+                    root.get("vintage"), vintage
+            );
+        };
+    }
+
+    public static Specification<WineEntity> hasRegion(String region) {
+        return (root, query, criteriaBuilder) -> {
+            if (region == null || region.isBlank()) {
+                return null;
+            }
+            return criteriaBuilder.like(
+                    criteriaBuilder.lower(root.get("region")),
+                    "%" + region.toLowerCase() + "%"
             );
         };
     }

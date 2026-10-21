@@ -2,6 +2,8 @@ package com.utn.vinoteca.features.wine.service;
 
 import com.utn.vinoteca.exception.BusinessRuleException;
 import com.utn.vinoteca.exception.ResourceNotFoundException;
+import com.utn.vinoteca.features.grapeVariety.entity.GrapeVarietyEntity;
+import com.utn.vinoteca.features.grapeVariety.repository.GrapeVarietyRepository;
 import com.utn.vinoteca.features.winery.entity.WineryEntity;
 import com.utn.vinoteca.features.winery.repository.WineryRepository;
 import com.utn.vinoteca.features.wineType.entity.WineTypeEntity;
@@ -22,17 +24,22 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.Year;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-public class WineService implements IWineService{
+public class WineService implements IWineService {
     private final WineRepository wineRepository;
     private final DistributorRepository distributorRepository;
     private final WineTypeRepository wineTypeRepository;
     private final WineryRepository wineryRepository;
     private final WineVariantRepository wineVariantRepository;
+    private final GrapeVarietyRepository grapeVarietyRepository;
 
     private final WineMapper wineMapper;
 
@@ -40,31 +47,16 @@ public class WineService implements IWineService{
     @Transactional
     @Override
     public WineResponseDTO create(WineRequestDTO wineRequestDTO) {
-        DistributorEntity distributor = distributorRepository.findByExternalId(wineRequestDTO.getDistributorId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Distributor not found with ID: ", wineRequestDTO.getDistributorId()));
-        if(!distributor.isActive()){
-            throw new BusinessRuleException("Cannot assign inactive distributor");
-        }
+        DistributorEntity distributor = findActiveDistributor(wineRequestDTO.getDistributorId());
+        WineTypeEntity wineType = findActiveWineType(wineRequestDTO.getWineTypeId());
+        WineryEntity winery = findActiveWinery(wineRequestDTO.getWineryId());
 
-        WineTypeEntity wineType = wineTypeRepository.findByExternalId(wineRequestDTO.getWineTypeId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", wineRequestDTO.getWineTypeId()));
-        if(!wineType.getActive()){
-            throw new BusinessRuleException("Cannot assign an inactive wine type");
-        }
-        WineryEntity winery =
-                wineryRepository.findByExternalId(wineRequestDTO.getWineryId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Winery not found. ID: ", wineRequestDTO.getWineryId()));
+        validateVintage(wineRequestDTO.getVintage());
+        assertNotDuplicated(wineRequestDTO, winery, null);
 
-        if(!winery.getActive()){
-            throw new BusinessRuleException("Cannot assign inactive winery");
-        }
+        Set<GrapeVarietyEntity> grapeVarieties = resolveGrapeVarieties(wineRequestDTO.getGrapeVarietyIds());
 
-
-        if(wineRepository.existsByNameAndWinery(wineRequestDTO.getName(), winery)){
-            throw new BusinessRuleException("Wine already exists for this winery.");
-        }
-
-        WineEntity wine = wineMapper.toEntity(wineRequestDTO, distributor, wineType, winery);
+        WineEntity wine = wineMapper.toEntity(wineRequestDTO, distributor, wineType, winery, grapeVarieties);
         wine.setActive(true);
 
         wineRepository.save(wine);
@@ -80,36 +72,16 @@ public class WineService implements IWineService{
                 .findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wine not found with ID: ", externalId));
 
-        DistributorEntity distributor = distributorRepository.findByExternalId(wineRequestDTO.getDistributorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Distributor not found with ID: ", wineRequestDTO.getDistributorId()));
+        DistributorEntity distributor = findActiveDistributor(wineRequestDTO.getDistributorId());
+        WineTypeEntity wineType = findActiveWineType(wineRequestDTO.getWineTypeId());
+        WineryEntity winery = findActiveWinery(wineRequestDTO.getWineryId());
 
-        if (!distributor.isActive()) {
-            throw new BusinessRuleException("Cannot assign inactive distributor");
-        }
+        validateVintage(wineRequestDTO.getVintage());
+        assertNotDuplicated(wineRequestDTO, winery, wine.getExternalId());
 
-        WineTypeEntity wineType = wineTypeRepository.findByExternalId(wineRequestDTO.getWineTypeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", wineRequestDTO.getWineTypeId()));
+        Set<GrapeVarietyEntity> grapeVarieties = resolveGrapeVarieties(wineRequestDTO.getGrapeVarietyIds());
 
-        if (!wineType.getActive()) {
-            throw new BusinessRuleException("Cannot assign an inactive wine type");
-        }
-
-        WineryEntity winery = wineryRepository.findByExternalId(wineRequestDTO.getWineryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Winery not found. ID: ", wineRequestDTO.getWineryId()));
-
-        if (!winery.getActive()) {
-            throw new BusinessRuleException("Cannot assign inactive winery");
-        }
-
-        WineEntity duplicated = wineRepository.findByNameAndWinery(wineRequestDTO.getName(), winery)
-                .orElse(null);
-
-        if (duplicated != null && !duplicated.getExternalId().equals(wine.getExternalId()))
-        {
-            throw new BusinessRuleException("Wine already exists for this winery.");
-        }
-
-        wineMapper.updateEntity(wine, wineRequestDTO, distributor, wineType, winery);
+        wineMapper.updateEntity(wine, wineRequestDTO, distributor, wineType, winery, grapeVarieties);
 
         wineRepository.save(wine);
 
@@ -181,13 +153,22 @@ public class WineService implements IWineService{
 
     //SEARCH WITH FILTERS
     @Override
-    public List<WineResponseDTO> search(String name, UUID distributorId, UUID wineTypeId, UUID wineryId){
+    public List<WineResponseDTO> search(String name,
+                                        UUID distributorId,
+                                        UUID wineTypeId,
+                                        UUID wineryId,
+                                        UUID grapeVarietyId,
+                                        Integer vintage,
+                                        String region) {
         Specification<WineEntity> specification = Specification
                 .where(WineSpecification.hasName(name))
                 .and(WineSpecification.isActive(true))
                 .and(WineSpecification.hasDistributor(distributorId))
                 .and(WineSpecification.hasWineType(wineTypeId))
-                .and(WineSpecification.hasWinery(wineryId));
+                .and(WineSpecification.hasWinery(wineryId))
+                .and(WineSpecification.hasGrapeVariety(grapeVarietyId))
+                .and(WineSpecification.hasVintage(vintage))
+                .and(WineSpecification.hasRegion(region));
 
         return wineRepository.findAll(specification)
                 .stream()
@@ -197,14 +178,23 @@ public class WineService implements IWineService{
 
     //LIST ALL INACTIVES
     @Override
-    public List<WineResponseDTO> getInactive(String name, UUID distributorId, UUID wineTypeId, UUID wineryId) {
+    public List<WineResponseDTO> getInactive(String name,
+                                             UUID distributorId,
+                                             UUID wineTypeId,
+                                             UUID wineryId,
+                                             UUID grapeVarietyId,
+                                             Integer vintage,
+                                             String region) {
 
         Specification<WineEntity> specification = Specification
                 .where(WineSpecification.hasName(name))
                 .and(WineSpecification.isActive(false))
                 .and(WineSpecification.hasDistributor(distributorId))
                 .and(WineSpecification.hasWineType(wineTypeId))
-                .and(WineSpecification.hasWinery(wineryId));
+                .and(WineSpecification.hasWinery(wineryId))
+                .and(WineSpecification.hasGrapeVariety(grapeVarietyId))
+                .and(WineSpecification.hasVintage(vintage))
+                .and(WineSpecification.hasRegion(region));
 
         return wineRepository
                 .findAll(specification)
@@ -222,4 +212,78 @@ public class WineService implements IWineService{
         return wineMapper.toResponse(wine);
     }
 
+    private DistributorEntity findActiveDistributor(UUID distributorId) {
+        DistributorEntity distributor = distributorRepository.findByExternalId(distributorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Distributor not found with ID: ", distributorId));
+
+        if (!distributor.isActive()) {
+            throw new BusinessRuleException("Cannot assign inactive distributor");
+        }
+
+        return distributor;
+    }
+
+    private WineTypeEntity findActiveWineType(UUID wineTypeId) {
+        WineTypeEntity wineType = wineTypeRepository.findByExternalId(wineTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wine type not found with ID: ", wineTypeId));
+
+        if (!wineType.getActive()) {
+            throw new BusinessRuleException("Cannot assign an inactive wine type");
+        }
+
+        return wineType;
+    }
+
+    private WineryEntity findActiveWinery(UUID wineryId) {
+        WineryEntity winery = wineryRepository.findByExternalId(wineryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Winery not found. ID: ", wineryId));
+
+        if (!winery.getActive()) {
+            throw new BusinessRuleException("Cannot assign inactive winery");
+        }
+
+        return winery;
+    }
+
+    private void validateVintage(Integer vintage) {
+        if (vintage == null) {
+            return;
+        }
+
+        int maxVintage = Year.now().getValue() + 1;
+
+        if (vintage < 1900 || vintage > maxVintage) {
+            throw new BusinessRuleException("Vintage must be between 1900 and " + maxVintage);
+        }
+    }
+
+    private void assertNotDuplicated(WineRequestDTO dto, WineryEntity winery, UUID currentExternalId) {
+        Optional<WineEntity> duplicated = dto.getVintage() == null
+                ? wineRepository.findByNameAndWinery(dto.getName(), winery)
+                : wineRepository.findByNameAndWineryAndVintage(dto.getName(), winery, dto.getVintage());
+
+        boolean belongsToAnotherWine = duplicated.isPresent()
+                && (currentExternalId == null || !duplicated.get().getExternalId().equals(currentExternalId));
+
+        if (belongsToAnotherWine) {
+            throw new BusinessRuleException("Wine already exists for this winery and vintage.");
+        }
+    }
+
+    private Set<GrapeVarietyEntity> resolveGrapeVarieties(Set<UUID> grapeVarietyIds) {
+        if (grapeVarietyIds == null || grapeVarietyIds.isEmpty()) {
+            throw new BusinessRuleException("At least one grape variety is required.");
+        }
+
+        Set<GrapeVarietyEntity> grapeVarieties = new HashSet<>();
+
+        for (UUID grapeVarietyId : grapeVarietyIds) {
+            GrapeVarietyEntity grapeVariety = grapeVarietyRepository.findByExternalIdAndActiveTrue(grapeVarietyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Grape variety not found with ID: ", grapeVarietyId));
+
+            grapeVarieties.add(grapeVariety);
+        }
+
+        return grapeVarieties;
+    }
 }

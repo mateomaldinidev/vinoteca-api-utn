@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface WineTypeRepository extends JpaRepository<WineTypeEntity, Long> {
 
     Optional<WineTypeEntity> findByExternalId(UUID externalId);
+    Optional<WineTypeEntity> findByName(String name);
     boolean existsByName(String name); // Añadir este metodo para validacion de nombre
 
     // Nuevos metodos para consistencia con el campo 'active'

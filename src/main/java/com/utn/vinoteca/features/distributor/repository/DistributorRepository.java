@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface DistributorRepository extends JpaRepository<DistributorEntity, Long> {
 
     Optional<DistributorEntity> findByExternalId(UUID externalId);
+    Optional<DistributorEntity> findByName(String name);
     boolean existsByName(String name);
 
     Optional<DistributorEntity> findByExternalIdAndActiveTrue(UUID externalId);
