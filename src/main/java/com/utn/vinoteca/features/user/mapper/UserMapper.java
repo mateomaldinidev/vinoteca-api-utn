@@ -1,8 +1,8 @@
 package com.utn.vinoteca.features.user.mapper;
 
-import com.utn.vinoteca.features.auth.CredentialsEntity;
-import com.utn.vinoteca.features.auth.RoleEntity;
-import com.utn.vinoteca.features.auth.Roles;
+import com.utn.vinoteca.security.entity.CredentialsEntity;
+import com.utn.vinoteca.security.entity.RoleEntity;
+import com.utn.vinoteca.security.enums.Roles;
 import com.utn.vinoteca.features.user.dto.UserRequestDTO;
 import com.utn.vinoteca.features.user.dto.UserResponseDTO;
 import com.utn.vinoteca.features.user.entity.UserEntity;

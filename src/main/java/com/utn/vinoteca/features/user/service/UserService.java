@@ -2,10 +2,10 @@ package com.utn.vinoteca.features.user.service;
 
 import com.utn.vinoteca.exception.EmailAlreadyExistsException;
 import com.utn.vinoteca.exception.ResourceNotFoundException;
-import com.utn.vinoteca.features.auth.CredentialsEntity;
-import com.utn.vinoteca.features.auth.CredentialsRepository;
-import com.utn.vinoteca.features.auth.RoleEntity;
-import com.utn.vinoteca.features.auth.RolesRepository;
+import com.utn.vinoteca.security.entity.CredentialsEntity;
+import com.utn.vinoteca.security.repository.CredentialsRepository;
+import com.utn.vinoteca.security.entity.RoleEntity;
+import com.utn.vinoteca.security.repository.RolesRepository;
 import com.utn.vinoteca.features.notifications.service.IEmailService;
 import com.utn.vinoteca.features.user.dto.UserRequestDTO;
 import com.utn.vinoteca.features.user.dto.UserResponseDTO;

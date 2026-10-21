@@ -1,4 +1,6 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.entity;
+
+import com.utn.vinoteca.security.enums.Roles;
 
 import jakarta.persistence.*;
 import lombok.*;

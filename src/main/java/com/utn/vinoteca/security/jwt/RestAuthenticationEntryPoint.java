@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.jwt;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

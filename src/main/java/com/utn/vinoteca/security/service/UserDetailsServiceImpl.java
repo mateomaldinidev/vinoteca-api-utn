@@ -1,4 +1,6 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.service;
+
+import com.utn.vinoteca.security.repository.CredentialsRepository;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;

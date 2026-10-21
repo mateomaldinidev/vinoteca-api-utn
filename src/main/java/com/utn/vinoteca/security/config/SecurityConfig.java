@@ -1,4 +1,7 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.config;
+
+import com.utn.vinoteca.security.jwt.JwtAuthenticationFilter;
+import com.utn.vinoteca.security.jwt.RestAuthenticationEntryPoint;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

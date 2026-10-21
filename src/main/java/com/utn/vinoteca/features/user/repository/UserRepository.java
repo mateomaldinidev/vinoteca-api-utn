@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.user.repository;
 
-import com.utn.vinoteca.features.auth.Roles;
+import com.utn.vinoteca.security.enums.Roles;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

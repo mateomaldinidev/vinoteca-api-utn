@@ -1,4 +1,11 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.seed;
+
+import com.utn.vinoteca.security.entity.PermitEntity;
+import com.utn.vinoteca.security.entity.RoleEntity;
+import com.utn.vinoteca.security.enums.Permits;
+import com.utn.vinoteca.security.enums.Roles;
+import com.utn.vinoteca.security.repository.PermitRepository;
+import com.utn.vinoteca.security.repository.RolesRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

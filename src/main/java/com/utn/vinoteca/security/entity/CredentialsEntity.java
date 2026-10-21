@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.entity;
 
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import jakarta.persistence.*;

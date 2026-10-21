@@ -1,6 +1,6 @@
 package com.utn.vinoteca.features.user.dto;
 
-import com.utn.vinoteca.features.auth.Roles;
+import com.utn.vinoteca.security.enums.Roles;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

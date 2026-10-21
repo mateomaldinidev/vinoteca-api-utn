@@ -1,4 +1,6 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.repository;
+
+import com.utn.vinoteca.security.entity.CredentialsEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

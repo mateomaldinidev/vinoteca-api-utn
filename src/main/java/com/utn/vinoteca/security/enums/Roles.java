@@ -1,4 +1,4 @@
-package com.utn.vinoteca.features.auth;
+package com.utn.vinoteca.security.enums;
 
 public enum Roles {
     ROLE_GUEST,
