@@ -141,6 +141,30 @@ Al arrancar, `WineDataInitializer` carga tipos de vino, varietales, bodegas, dis
 
 ---
 
+## Tests
+
+La suite corre contra H2 en memoria (perfil `test`), no necesita MySQL ni Mailhog:
+
+```bash
+./mvnw test
+```
+
+Los tests de integración cubren los invariantes del negocio antes de refactorizar precios, stock y checkout:
+
+| Test | Invariante |
+|------|------------|
+| `WholesalePriceTest` | El precio mayorista se aplica desde `wholesaleMinQty`; por debajo se usa el minorista |
+| `CannotBuyMoreThanStockTest` | No se agrega al carrito ni se compra más que el stock disponible |
+| `StockNeverNegativeTest` | Vender descuenta stock y nunca lo deja negativo |
+| `OrderTotalFrozenTest` | El total y el precio unitario quedan congelados al crear la orden |
+| `CancelRestoresStockTest` | Cancelar repone stock y registra un movimiento `CANCELLATION` |
+| `PaymentApprovedTest` | Pago aprobado deja la orden `PAID` y mantiene el stock descontado |
+| `PaymentRejectedTest` | Pago rechazado cancela la orden y repone stock |
+
+El perfil de test desactiva el seed del catálogo (`app.seed.enabled=false`) y reemplaza el envío de mails por un mock. El simulador de tarjeta se reemplaza por un mock para que los resultados de pago sean deterministas.
+
+---
+
 ## Documentación API (Swagger)
 
 Una vez que la aplicación está corriendo, la documentación interactiva de la API está disponible en:
