@@ -11,7 +11,6 @@ import com.utn.vinoteca.features.address.repository.AddressRepository;
 import com.utn.vinoteca.features.cart.entity.CartEntity;
 import com.utn.vinoteca.features.cart.repository.CartRepository;
 import com.utn.vinoteca.features.notifications.service.IEmailService;
-import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository;
 import com.utn.vinoteca.features.order.dto.OrderAdminResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
 import com.utn.vinoteca.features.order.enums.OrderStatus;
@@ -23,15 +22,13 @@ import com.utn.vinoteca.features.order.repository.OrderRepository;
 import com.utn.vinoteca.features.orderItem.entity.OrderItemEntity;
 import com.utn.vinoteca.features.orderItem.mapper.OrderItemMapper;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
-import com.utn.vinoteca.features.wineVariant.repository.WineVariantRepository;
-import com.utn.vinoteca.features.stockMovement.entity.StockMovementEntity;
-import com.utn.vinoteca.features.stockMovement.enums.StockMovementType;
-import com.utn.vinoteca.features.stockMovement.repository.StockMovementRepository;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import com.utn.vinoteca.features.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.utn.vinoteca.exception.BadRequestException;
+import com.utn.vinoteca.features.pricing.service.PricingService;
+import com.utn.vinoteca.features.stock.service.StockService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -47,14 +44,13 @@ public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final WineVariantRepository wineVariantRepository;
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final AddressRepository addressRepository;
     private final CartRepository cartRepository;
-    private final StockMovementRepository stockMovementRepository;
     private final IEmailService emailService;
-    private final OfferProductRepository offerProductRepository;
+    private final PricingService pricingService;
+    private final StockService stockService;
 
     @Override
     @Transactional
@@ -124,22 +120,13 @@ public class OrderService implements IOrderService {
                                 throw new BusinessRuleException("Wine variant is inactive");
                             }
 
-                            if (variant.getStock() < cartItem.getQuantity()) {
-                                throw new BusinessRuleException("Insufficient stock");
-                            }
-
                             BigDecimal unitPrice =
-                                    calculateUnitPrice(variant, cartItem.getQuantity());
+                                    pricingService.calculateUnitPrice(variant, cartItem.getQuantity());
 
                             BigDecimal subtotal =
                                     unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
 
-                            // descontar stock
-                            variant.setStock(variant.getStock() - cartItem.getQuantity());
-                            wineVariantRepository.save(variant);
-
-                            // movimiento stock
-                            createStockMovement(variant, cartItem.getQuantity(), StockMovementType.SALE, "Stock discounted by order creation");
+                            stockService.discount(variant, cartItem.getQuantity(), "Stock discounted by order creation");
 
                             return orderItemMapper.toEntity(order, variant, cartItem.getQuantity(), unitPrice, subtotal);
                         })
@@ -275,40 +262,12 @@ public class OrderService implements IOrderService {
     private void restoreStock(OrderEntity order) {
 
         for (OrderItemEntity item : order.getItems()) {
-
-            WineVariantEntity variant = item.getWineVariant();
-
-            variant.setStock(variant.getStock() + item.getQuantity());
-
-            wineVariantRepository.save(variant);
-
-            createStockMovement(
-                    variant,
+            stockService.restore(
+                    item.getWineVariant(),
                     item.getQuantity(),
-                    StockMovementType.CANCELLATION,
                     "Stock restored by order cancellation"
             );
         }
-    }
-
-    private BigDecimal calculateUnitPrice(WineVariantEntity variant, Integer quantity) {
-
-        BigDecimal offerPrice = offerProductRepository
-                .findActiveOfferForVariant(variant.getExternalId())
-                .map(op -> op.getDiscountedPrice())
-                .orElse(null);
-
-        if (offerPrice != null) {
-            return offerPrice;
-        }
-
-        if (variant.getWholesaleMinQty() != null
-                && variant.getWholesalePrice() != null
-                && quantity >= variant.getWholesaleMinQty()) {
-            return variant.getWholesalePrice();
-        }
-
-        return variant.getPrice();
     }
 
     private UserEntity findUser(UUID externalId) {
@@ -316,18 +275,6 @@ public class OrderService implements IOrderService {
         return userRepository
                 .findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", externalId));
-    }
-
-    private void createStockMovement(WineVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
     }
 
 }

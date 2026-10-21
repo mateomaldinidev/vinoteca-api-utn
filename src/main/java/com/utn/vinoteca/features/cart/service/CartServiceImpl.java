@@ -11,7 +11,7 @@ import com.utn.vinoteca.features.cart_item.dto.CartItemRequestDTO;
 import com.utn.vinoteca.features.cart_item.dto.CartItemResponseDTO;
 import com.utn.vinoteca.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.vinoteca.features.cart_item.entity.CartItemEntity;
-import com.utn.vinoteca.features.offer_product.repository.OfferProductRepository;
+import com.utn.vinoteca.features.pricing.service.PricingService;
 import com.utn.vinoteca.features.order.dto.OrderResponseDTO;
 import com.utn.vinoteca.features.order.enums.DeliveryType;
 import com.utn.vinoteca.features.order.service.OrderService;
@@ -40,7 +40,7 @@ public class CartServiceImpl implements ICartService {
     private final WineVariantRepository wineVariantRepository;
     private final ModelMapper modelMapper;
     private final OrderService orderService;
-    private final OfferProductRepository offerProductRepository;
+    private final PricingService pricingService;
 
     @Transactional
     public CartResponseDTO createOrUpdateCart(CartRequestDTO cartRequest) {
@@ -194,7 +194,7 @@ public class CartServiceImpl implements ICartService {
                     itemResponseDTO.setVariantAttribute(cartItemEntity.getWineVariant().getAttribute());
 
                     WineVariantEntity wineVariant = cartItemEntity.getWineVariant();
-                    BigDecimal unitPrice = calculateUnitPrice(
+                    BigDecimal unitPrice = pricingService.calculateUnitPrice(
                             wineVariant,
                             cartItemEntity.getQuantity());
 
@@ -225,27 +225,6 @@ public class CartServiceImpl implements ICartService {
 
         return user;
     }
-
-    private BigDecimal calculateUnitPrice(WineVariantEntity variant, Integer quantity) {
-
-        BigDecimal offerPrice = offerProductRepository
-                .findActiveOfferForVariant(variant.getExternalId())
-                .map(op -> op.getDiscountedPrice())
-                .orElse(null);
-
-        if (offerPrice != null) {
-            return offerPrice;
-        }
-
-        if (variant.getWholesaleMinQty() != null
-                && variant.getWholesalePrice() != null
-                && quantity >= variant.getWholesaleMinQty()) {
-            return variant.getWholesalePrice();
-        }
-
-        return variant.getPrice();
-    }
-
     public CartEntity getCartEntityByUserId(UUID userExternalId) {
         UserEntity user = getActiveUser(userExternalId);
 

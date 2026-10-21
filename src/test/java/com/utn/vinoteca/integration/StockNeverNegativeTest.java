@@ -1,6 +1,6 @@
 package com.utn.vinoteca.integration;
 
-import com.utn.vinoteca.exception.BusinessRuleException;
+import com.utn.vinoteca.exception.StockInsufficientException;
 import com.utn.vinoteca.features.user.entity.UserEntity;
 import com.utn.vinoteca.features.wineVariant.entity.WineVariantEntity;
 import com.utn.vinoteca.support.AbstractIntegrationTest;
@@ -39,8 +39,7 @@ class StockNeverNegativeTest extends AbstractIntegrationTest {
         wineVariantRepository.save(contestedVariant);
 
         assertThatThrownBy(() -> checkout(lateBuyer))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("Insufficient stock");
+                .isInstanceOf(StockInsufficientException.class);
 
         assertThat(contestedVariant.getStock()).isEqualTo(3).isGreaterThanOrEqualTo(0);
     }
