@@ -64,7 +64,7 @@ public class CartController {
 
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasAuthority('CART_CLEAR')")
-    @Operation(summary = "Vaciar carrito", description = "Elimina todos los items del carrito de un usuario")
+    @Operation(summary = "Vaciar carrito", description = "Elimina todos los items dvel carrito de un usuario")
     @ApiResponse(responseCode = "204", description = "Carrito vaciado")
     public ResponseEntity<Void> clearCart(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID userId) {

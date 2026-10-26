@@ -19,7 +19,7 @@ public class CartRequestDTO {
     private UUID userId;
 
 
-    @Valid // Asegura que cada CartItemRequestDTO en la lista también sea validado
+    @Valid
     @NotEmpty(message = "Cart items list cannot be empty.") // tambien que no sea null
     private List<CartItemRequestDTO> items;
 }

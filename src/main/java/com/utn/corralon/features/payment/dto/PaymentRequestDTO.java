@@ -16,8 +16,8 @@ import java.util.UUID;
 @Builder
 public class PaymentRequestDTO {
     @NotNull(message = "Order ID is required")
-
     private UUID orderId;
+
     @NotNull(message = "Payment method is required")
     private PaymentMethod paymentMethod;
 
