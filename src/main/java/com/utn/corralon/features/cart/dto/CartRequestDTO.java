@@ -15,12 +15,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class CartRequestDTO {
-    @NotNull(message = "User ID cannot be null")
-    private UUID userId;
-
 
     @Valid
-    @NotEmpty(message = "Cart items list cannot be empty.") // tambien que no sea null
+    @NotEmpty(message = "Cart items list cannot be empty.")
     private List<CartItemRequestDTO> items;
 }
 

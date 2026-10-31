@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -32,11 +33,14 @@ public class PaymentController {
             @ApiResponse(responseCode = "400", description = "Error al procesar el pago")
     })
     public ResponseEntity<PaymentResponseDTO> pay(
-            @Valid @RequestBody PaymentRequestDTO request
-    ) {
+            @Valid @RequestBody PaymentRequestDTO request,
+            Authentication authentication) {
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
 
         return ResponseEntity.ok(
-                paymentService.pay(request)
+                paymentService.pay(request, authentication.getName(), isAdmin)
         );
     }
 
@@ -48,10 +52,15 @@ public class PaymentController {
             @ApiResponse(responseCode = "404", description = "Pago no encontrado")
     })
     public ResponseEntity<PaymentResponseDTO> getByOrder(
-            @Parameter(description = "ID externo de la orden") @PathVariable UUID orderId
-    ) {
+            @Parameter(description = "ID externo de la orden")
+            @PathVariable UUID orderId,
+            Authentication authentication) {
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+
         return ResponseEntity.ok(
-                paymentService.getByOrderId(orderId)
+                paymentService.getByOrderId(orderId, authentication.getName(), isAdmin)
         );
     }
 }
