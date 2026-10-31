@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +28,7 @@ public class OrderController {
     private final IOrderService orderService;
 
     @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    @PreAuthorize("hasAuthority('ORDER_READ_ALL')")
     @Operation(summary = "Listar todas las ordenes (Admin)", description = "Retorna todas las ordenes del sistema. Solo admin y empleado.")
     public ResponseEntity<List<OrderAdminResponseDTO>> getAll() {
 
@@ -37,50 +38,50 @@ public class OrderController {
     }
 
     @GetMapping("/{externalId}")
-    @PreAuthorize("hasAuthority('ORDER_READ')")
+    @PreAuthorize("hasAnyAuthority('ORDER_READ', 'ORDER_READ_ALL')")
     @Operation(summary = "Obtener orden por ID", description = "Retorna una orden por su externalId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orden encontrada"),
             @ApiResponse(responseCode = "404", description = "Orden no encontrada")
     })
     public ResponseEntity<OrderResponseDTO> getByExternalId(
-            @Parameter(description = "ID externo de la orden") @PathVariable UUID externalId) {
+            @PathVariable UUID externalId,
+            Authentication authentication) {
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(orderService.getByExternalId(externalId));
+        return ResponseEntity.ok(
+                orderService.getByExternalId(externalId, authentication.getName())
+        );
     }
 
     @PostMapping("/{externalId}/cancel")
-    @PreAuthorize("hasAuthority('ORDER_CANCEL_OWN')")
+    @PreAuthorize("hasAnyAuthority('ORDER_CANCEL_OWN', 'ORDER_CANCEL_ANY')")
     @Operation(summary = "Cancelar orden", description = "Cancela una orden existente")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Orden cancelada"),
             @ApiResponse(responseCode = "404", description = "Orden no encontrada")
     })
     public ResponseEntity<Void> cancelOrder(
-            @Parameter(description = "ID externo de la orden") @PathVariable UUID externalId,
-            @Parameter(description = "ID externo del usuario") @RequestParam UUID userExternalId
+            @PathVariable UUID externalId,
+            Authentication authentication
     ) {
+        orderService.cancelOrder(externalId, authentication.getName());
 
-        orderService.cancelOrder(externalId, userExternalId);
-
-        return ResponseEntity
-                .noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{userExternalId}")
+    @GetMapping("/user")
     @PreAuthorize("hasAuthority('ORDER_READ_BY_USER')")
-    @Operation(summary = "Obtener ordenes de un usuario", description = "Retorna todas las ordenes de un usuario especifico")
+    @Operation(summary = "Obtener ordenes de un usuario", description = "Retorna las órdenes del usuario que inició sesión")
     public ResponseEntity<List<OrderSummaryDTO>> getOrdersByUser(
-            @Parameter(description = "ID externo del usuario") @PathVariable UUID userExternalId) {
-
-        return ResponseEntity.ok(orderService.getOrdersByUser(userExternalId));
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(
+                orderService.getOrdersByUser(authentication.getName())
+        );
     }
 
     @GetMapping("/admin/{externalId}")
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLOYEE')")
+    @PreAuthorize("hasAuthority('ORDER_READ_ALL')")
     @Operation(summary = "Obtener orden detalle (Admin)", description = "Retorna el detalle completo de una orden. Solo admin y empleado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orden encontrada"),

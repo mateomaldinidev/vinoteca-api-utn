@@ -43,7 +43,7 @@ public class SecurityDataInitializer {
             roleRepository.save(admin);
 
             // GUEST
-            createRoleIfNotExists(
+            createOrUpdateRole(
                     Roles.ROLE_GUEST,
                     List.of(
                             Permits.PRODUCT_READ,
@@ -60,7 +60,7 @@ public class SecurityDataInitializer {
             );
 
             // CUSTOMER
-            createRoleIfNotExists(
+            createOrUpdateRole(
                     Roles.ROLE_CUSTOMER,
                     List.of(
                             Permits.PRODUCT_READ,
@@ -100,7 +100,7 @@ public class SecurityDataInitializer {
             );
 
             // EMPLOYEE
-            createRoleIfNotExists(
+            createOrUpdateRole(
                     Roles.ROLE_EMPLOYEE,
                     List.of(
                             Permits.PRODUCT_CREATE,
@@ -161,16 +161,14 @@ public class SecurityDataInitializer {
         };
     }
 
-    private void createRoleIfNotExists(
+    private void createOrUpdateRole(
             Roles role,
             List<Permits> permits
     ) {
+        RoleEntity roleEntity = roleRepository.findByRole(role)
+                .orElseGet(() -> new RoleEntity(role));
 
-        if (roleRepository.findByRole(role).isPresent()) {
-            return;
-        }
-
-        RoleEntity roleEntity = new RoleEntity(role);
+        roleEntity.getPermits().clear();
 
         permits.forEach(permission ->
                 permitRepository.findByPermit(permission)
