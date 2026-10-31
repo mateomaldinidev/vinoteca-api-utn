@@ -15,13 +15,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class PaymentRequestDTO {
+
     @NotNull(message = "Order ID is required")
     private UUID orderId;
 
     @NotNull(message = "Payment method is required")
     private PaymentMethod paymentMethod;
-
-    @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be greater than 0")
-    private BigDecimal amount;
 }

@@ -2,6 +2,7 @@ package com.utn.corralon.features.payment.service;
 
 import com.utn.corralon.exception.BusinessRuleException;
 import com.utn.corralon.exception.ResourceNotFoundException;
+import com.utn.corralon.exception.UnauthorizedException;
 import com.utn.corralon.features.notifications.service.IEmailService;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.entity.OrderEntity;
@@ -41,17 +42,26 @@ public class PaymentService implements IPaymentService {
     private final StockMovementRepository stockMovementRepository;
 
     @Override
-    public PaymentResponseDTO pay(PaymentRequestDTO request) {
+    public PaymentResponseDTO pay(
+            PaymentRequestDTO request,
+            String username,
+            boolean isAdmin) {
 
         OrderEntity order = orderRepository.findByExternalId(request.getOrderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found wit ID: ", request.getOrderId()));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Order not found with ID: ",
+                                request.getOrderId()
+                        ));
 
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
-            throw new BusinessRuleException("Order is not pending payment");
+        // Verificar que la orden pertenezca al usuario autenticado
+        if (!isAdmin && !order.getUser().getEmail().equals(username)) {
+            throw new UnauthorizedException("You are not authorized to pay this order");
         }
 
-        if (request.getAmount().compareTo(order.getTotal()) != 0) {
-            throw new BusinessRuleException("Invalid payment amount");
+        // Verificar que la orden esté pendiente de pago
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BusinessRuleException("Order is not pending payment");
         }
 
         // Crear payment en estado PENDING
@@ -89,7 +99,7 @@ public class PaymentService implements IPaymentService {
             return paymentMapper.toDTO(payment);
         }
 
-        // CASO REJECTED → rollback stock + cancelar orden
+        // CASO REJECTED: restaurar stock y cancelar orden
         payment.setPaymentStatus(PaymentStatus.REJECTED);
         order.setStatus(OrderStatus.CANCELLED);
 
@@ -132,7 +142,12 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    private void createStockMovement(ProductVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
+    private void createStockMovement(
+            ProductVariantEntity variant,
+            Integer quantity,
+            StockMovementType type,
+            String reason) {
+
         StockMovementEntity movement = StockMovementEntity.builder()
                 .movementDate(LocalDateTime.now())
                 .quantity(quantity)
@@ -144,7 +159,6 @@ public class PaymentService implements IPaymentService {
         stockMovementRepository.save(movement);
     }
 
-
     // SIMULACIÓN TARJETA
     private PaymentStatus simulateCard(PaymentRequestDTO request) {
 
@@ -153,11 +167,25 @@ public class PaymentService implements IPaymentService {
                 : PaymentStatus.REJECTED;
     }
 
-    public PaymentResponseDTO getByOrderId(UUID orderId) {
+    @Override
+    public PaymentResponseDTO getByOrderId(
+            UUID orderId,
+            String username,
+            boolean isAdmin) {
 
         PaymentEntity payment = paymentRepository.findByOrder_ExternalId(orderId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Payment not found for order ID: ", orderId));
+                        new ResourceNotFoundException(
+                                "Payment not found for order ID: ",
+                                orderId
+                        ));
+
+        // Verificar que el pago pertenezca a una orden del usuario autenticado
+        if (!isAdmin && !payment.getOrder().getUser().getEmail().equals(username)) {
+            throw new UnauthorizedException(
+                    "You are not authorized to access this payment"
+            );
+        }
 
         return paymentMapper.toDTO(payment);
     }

@@ -11,15 +11,23 @@ import java.util.UUID;
 
 public interface ICartService {
 
-    CartResponseDTO createOrUpdateCart(CartRequestDTO cartRequest);
+    CartResponseDTO createOrUpdateCart(String username, CartRequestDTO cartRequest);
 
-    CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID productVariantId, CartItemQuantityUpdateDTO updateDTO);
+    CartResponseDTO updateCartItemQuantity(
+            String username,
+            UUID productVariantId,
+            CartItemQuantityUpdateDTO updateDTO
+    );
 
-    CartResponseDTO getCartByUserId(UUID userExternalId);
+    CartResponseDTO getCart(String username);
 
-    void clearCart(UUID userExternalId);
+    void clearCart(String username);
 
-    OrderResponseDTO checkout(UUID userId, UUID addressId, DeliveryType deliveryType);
+    OrderResponseDTO checkout(
+            String username,
+            UUID addressId,
+            DeliveryType deliveryType
+    );
 
-    CartEntity getCartEntityByUserId(UUID userExternalId);
+    CartEntity getCartEntity(String username);
 }
