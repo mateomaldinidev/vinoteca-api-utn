@@ -185,21 +185,39 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public OrderResponseDTO getByExternalId(UUID externalId) {
+    public OrderResponseDTO getByExternalId(UUID externalId, String username) {
 
         OrderEntity order = orderRepository
                 .findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: ", externalId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found with ID: ", externalId));
+
+        CredentialsEntity credentials = credentialsRepository
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Credentials not found id: ", externalId));
+
+        boolean isAdminOrEmployee = credentials.getRoles().stream()
+                .anyMatch(r -> r.getRole() == Roles.ROLE_ADMIN
+                        || r.getRole() == Roles.ROLE_EMPLOYEE);
+
+        if (!isAdminOrEmployee &&
+                !order.getUser().getEmail().equals(username)) {
+            throw new UnauthorizedException("You can only access your own orders");
+        }
 
         return orderMapper.toResponseDTO(order);
     }
 
     @Override
-    public List<OrderSummaryDTO> getOrdersByUser(UUID userExternalId) {
-        findUser(userExternalId);
+    public List<OrderSummaryDTO> getOrdersByUser(String username) {
+
+        UserEntity user = userRepository.findByEmail(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found", username));
 
         return orderRepository
-                .findByUser_ExternalId(userExternalId)
+                .findByUser_ExternalId(user.getExternalId())
                 .stream()
                 .map(orderMapper::toSummary)
                 .toList();
@@ -222,30 +240,33 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public void cancelOrder(UUID externalId, UUID userExternalId) {
+    public void cancelOrder(UUID externalId, String username) {
 
         OrderEntity order = orderRepository
                 .findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: ", externalId));
-
-        UserEntity requestingUser = userRepository
-                .findByExternalId(userExternalId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", userExternalId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found with ID: ", externalId));
 
         CredentialsEntity credentials = credentialsRepository
-                .findByUsername(requestingUser.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("Credentials not found for user: ", userExternalId));
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Credentials not found id: ", externalId));
+
+        boolean isAdminOrEmployee = credentials.getRoles().stream()
+                .anyMatch(r -> r.getRole() == Roles.ROLE_ADMIN
+                        || r.getRole() == Roles.ROLE_EMPLOYEE);
 
         boolean isCustomer = credentials.getRoles().stream()
                 .anyMatch(r -> r.getRole() == Roles.ROLE_CUSTOMER);
 
-        boolean isAdminOrEmployee = credentials.getRoles().stream()
-                .anyMatch(r -> r.getRole() == Roles.ROLE_ADMIN || r.getRole() == Roles.ROLE_EMPLOYEE);
-
         if (isCustomer && !isAdminOrEmployee) {
-            if (!order.getUser().getExternalId().equals(userExternalId)) {
+            if (!order.getUser().getEmail().equals(username)) {
                 throw new UnauthorizedException("You can only cancel your own orders");
             }
+        }
+
+        if (!isCustomer && !isAdminOrEmployee) {
+            throw new UnauthorizedException("You are not allowed to cancel orders");
         }
 
         if (order.getStatus() == OrderStatus.CANCELLED) {
@@ -257,9 +278,7 @@ public class OrderService implements IOrderService {
         }
 
         restoreStock(order);
-
         order.setStatus(OrderStatus.CANCELLED);
-
         orderRepository.save(order);
 
         OrderResponseDTO orderDTO = orderMapper.toResponseDTO(order);

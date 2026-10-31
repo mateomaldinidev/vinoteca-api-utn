@@ -18,11 +18,11 @@ public interface IOrderService {
 
     List<OrderAdminResponseDTO> getAll();
 
-    OrderResponseDTO getByExternalId(UUID externalId);
+    OrderResponseDTO getByExternalId(UUID externalId, String username);
 
-    List<OrderSummaryDTO> getOrdersByUser(UUID userExternalId);
+    List<OrderSummaryDTO> getOrdersByUser(String username);
 
     OrderAdminResponseDTO getAdminOrder(UUID externalId);
 
-    void cancelOrder(UUID externalId, UUID userExternalId);
+    void cancelOrder(UUID externalId, String username);
 }
