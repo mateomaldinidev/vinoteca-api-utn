@@ -5,3 +5,10 @@ target/
 .DS_Store
 desktop.ini
 src/main/resources/application.yaml
+
+# Archivos temporales de imagenes subidas.
+# Las imagenes reales de uploads/products SI se versionan para compartirlas por Git.
+uploads/**/*.tmp
+uploads/**/.DS_Store
+uploads/**/Thumbs.db
+uploads/**/desktop.ini

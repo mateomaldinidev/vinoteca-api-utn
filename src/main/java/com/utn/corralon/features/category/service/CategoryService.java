@@ -7,6 +7,7 @@ import com.utn.corralon.features.category.dto.CategoryResponseDTO;
 import com.utn.corralon.features.category.entity.CategoryEntity;
 import com.utn.corralon.features.category.mapper.CategoryMapper;
 import com.utn.corralon.features.category.repository.CategoryRepository;
+import com.utn.corralon.features.product.service.ProductCascadeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class CategoryService implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductCascadeService productCascadeService;
 
     @Override
     @Transactional
@@ -70,8 +72,20 @@ public class CategoryService implements ICategoryService {
     public void delete(UUID externalId) {
         CategoryEntity entity = categoryRepository.findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: ", externalId));
+
+        // Primero se desactivan los productos relacionados y todas sus variantes.
+        productCascadeService.deactivateByCategory(externalId);
+
         entity.setActive(false);
         categoryRepository.save(entity);
+    }
+
+    @Override
+    public long countAssociatedProducts(UUID externalId) {
+        categoryRepository.findByExternalIdAndActiveTrue(externalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: ", externalId));
+
+        return productCascadeService.countByCategory(externalId);
     }
 
     @Override

@@ -5,17 +5,23 @@ import com.utn.corralon.features.category.entity.CategoryEntity;
 import com.utn.corralon.features.product.dto.ProductRequestDTO;
 import com.utn.corralon.features.product.dto.ProductResponseDTO;
 import com.utn.corralon.features.product.entity.ProductEntity;
+import com.utn.corralon.features.productImage.dto.ProductImageResponseDTO;
+import com.utn.corralon.features.productImage.entity.ProductImageEntity;
+import com.utn.corralon.features.productImage.mapper.ProductImageMapper;
 import com.utn.corralon.features.supplier.entity.SupplierEntity;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
-@AllArgsConstructor
+import java.util.Comparator;
+import java.util.List;
 
+@AllArgsConstructor
 @Component
 public class ProductMapper {
-    private final ModelMapper modelMapper;
 
+    private final ModelMapper modelMapper;
+    private final ProductImageMapper productImageMapper;
 
     public ProductResponseDTO toResponse(ProductEntity product) {
         ProductResponseDTO response = modelMapper.map(product, ProductResponseDTO.class);
@@ -28,6 +34,22 @@ public class ProductMapper {
 
         response.setBrandId(product.getBrand().getExternalId());
         response.setBrandName(product.getBrand().getName());
+
+        List<ProductImageResponseDTO> images = (product.getProductImages() == null
+                ? List.<ProductImageEntity>of()
+                : product.getProductImages())
+                .stream()
+                .sorted(Comparator.comparing(ProductImageEntity::isPrincipal).reversed()
+                        .thenComparing(ProductImageEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(productImageMapper::toResponse)
+                .toList();
+
+        response.setImages(images);
+        response.setPrincipalImagePath(images.stream()
+                .filter(ProductImageResponseDTO::isPrincipal)
+                .map(ProductImageResponseDTO::getUrl)
+                .findFirst()
+                .orElseGet(() -> images.isEmpty() ? null : images.get(0).getUrl()));
 
         return response;
     }
@@ -56,6 +78,4 @@ public class ProductMapper {
         product.setCategory(category);
         product.setBrand(brand);
     }
-
-
 }

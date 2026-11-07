@@ -27,7 +27,12 @@ public class SupplierMapper {
 
 
     public void updateEntity(SupplierEntity supplier, SupplierRequestDTO dto) { // Cambiado SupplierResponseDTO a SupplierRequestDTO
+        boolean active = supplier.isActive();
         modelMapper.map(dto, supplier);
+
+        // La desactivacion solo se permite mediante DELETE para garantizar
+        // la desactivacion en cascada de productos y variantes.
+        supplier.setActive(active);
     }
 
 }

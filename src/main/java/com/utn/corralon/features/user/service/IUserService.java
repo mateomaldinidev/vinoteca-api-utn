@@ -13,5 +13,6 @@ public interface IUserService {
     UserResponseDTO getByExternalId(UUID externalId);
     UserResponseDTO update(UUID externalId, UserRequestDTO dto);
     void delete(UUID externalId);
-
+    List<UserResponseDTO> getInactiveUsers();
+    void activate(UUID externalId);
 }

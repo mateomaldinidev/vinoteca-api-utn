@@ -26,7 +26,12 @@ public class BrandMapper {
 
     public void updateEntity(BrandEntity brand,
                              BrandRequestDTO dto) {
+        Boolean active = brand.getActive();
         modelMapper.map(dto, brand);
+
+        // La desactivacion solo se permite mediante DELETE para garantizar
+        // la desactivacion en cascada de productos y variantes.
+        brand.setActive(active != null ? active : Boolean.TRUE);
     }
 
 

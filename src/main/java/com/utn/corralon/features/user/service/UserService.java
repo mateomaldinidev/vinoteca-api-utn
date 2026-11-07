@@ -229,5 +229,36 @@ public class UserService implements IUserService {
 
         return userMapper.toResponse(saved, credentials);
     }
+    @Override
+    public List<UserResponseDTO> getInactiveUsers() {
+        return userRepository.findAllByActiveFalse().stream()
+                .map(user -> {
+                    CredentialsEntity credentials = credentialsRepository.findByUsername(user.getEmail())
+                            .orElse(null);
+                    return userMapper.toResponse(user, credentials);
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void activate(UUID externalId) {
+        UserEntity entity = userRepository.findByExternalId(externalId)
+                .filter(user -> !user.getActive())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Cannot be activated. User not found with ID: ", externalId)
+                );
+
+        CredentialsEntity credentials = credentialsRepository.findByUsername(entity.getEmail())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Credentials not found for user: ", externalId)
+                );
+
+        entity.setActive(true);
+        credentials.setEnabled(true);
+
+        userRepository.save(entity);
+        credentialsRepository.save(credentials);
+    }
 
 }

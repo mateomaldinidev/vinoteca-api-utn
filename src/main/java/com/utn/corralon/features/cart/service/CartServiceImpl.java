@@ -87,6 +87,12 @@ public class CartServiceImpl implements ICartService {
                                     + " is not active and cannot be added to cart.");
                 }
 
+                if (!productVariant.getProduct().isActive()) {
+                    throw new BusinessRuleException(
+                            "Product with ID " + productVariant.getProduct().getExternalId()
+                                    + " is not active and cannot be added to cart.");
+                }
+
                 if (productVariant.getStock() < incomingItemRequest.getQuantity()) {
                     throw new StockInsufficientException(productVariant.getExternalId().toString());
                 }
@@ -115,6 +121,12 @@ public class CartServiceImpl implements ICartService {
             if (!productVariant.getActive()) {
                 throw new BusinessRuleException(
                         "Product variant with ID " + newItemRequest.getProductVariantId()
+                                + " is not active and cannot be added to cart.");
+            }
+
+            if (!productVariant.getProduct().isActive()) {
+                throw new BusinessRuleException(
+                        "Product with ID " + productVariant.getProduct().getExternalId()
                                 + " is not active and cannot be added to cart.");
             }
 
@@ -167,6 +179,12 @@ public class CartServiceImpl implements ICartService {
             if (!productVariant.getActive()) {
                 throw new BusinessRuleException(
                         "Product variant with ID " + productVariantId
+                                + " is not active and cannot be updated in cart.");
+            }
+
+            if (!productVariant.getProduct().isActive()) {
+                throw new BusinessRuleException(
+                        "Product with ID " + productVariant.getProduct().getExternalId()
                                 + " is not active and cannot be updated in cart.");
             }
 

@@ -25,6 +25,11 @@ public class CategoryMapper {
 
     public void updateEntity(CategoryEntity category,
                              CategoryRequestDTO dto) {
+        Boolean active = category.getActive();
         modelMapper.map(dto, category);
+
+        // La desactivacion solo se permite mediante DELETE para garantizar
+        // la desactivacion en cascada de productos y variantes.
+        category.setActive(active != null ? active : Boolean.TRUE);
     }
 }

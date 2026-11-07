@@ -45,9 +45,14 @@ services:
       MAIL_AUTH: "false"
       MAIL_STARTTLS: "false"
       APP_BASE_URL: http://localhost:8080
+      APP_UPLOAD_DIR: /app/uploads
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
       JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-86400000}
+    volumes:
+      # Bind mount: la carpeta vive en el host (repositorio Git), no en un
+      # volumen nombrado por integrante. Asi todos comparten las mismas imagenes.
+      - ./uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
