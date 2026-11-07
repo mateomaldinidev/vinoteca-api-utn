@@ -77,4 +77,20 @@ public class UserController {
         userService.delete(externalId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/inactive")
+    @PreAuthorize("hasAuthority('USER_LIST')")
+    @Operation(summary = "Listar usuarios inactivos")
+    public ResponseEntity<List<UserResponseDTO>> getInactiveUsers() {
+        return ResponseEntity.ok(userService.getInactiveUsers());
+    }
+
+    @PatchMapping("/{externalId}/activate")
+    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @Operation(summary = "Reactivar usuario")
+    public ResponseEntity<Void> activate(
+            @PathVariable UUID externalId) {
+        userService.activate(externalId);
+        return ResponseEntity.noContent().build();
+    }
 }

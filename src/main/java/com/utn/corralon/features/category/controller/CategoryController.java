@@ -3,6 +3,7 @@ package com.utn.corralon.features.category.controller;
 import com.utn.corralon.features.category.dto.CategoryRequestDTO;
 import com.utn.corralon.features.category.dto.CategoryResponseDTO;
 import com.utn.corralon.features.category.service.ICategoryService;
+import com.utn.corralon.features.product.dto.RelatedProductsCountDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -68,7 +69,7 @@ public class CategoryController {
 
     @DeleteMapping("/{externalId}")
     @PreAuthorize("hasAuthority('CATEGORY_DELETE')")
-    @Operation(summary = "Eliminar categoria", description = "Eliminacion logica de una categoria")
+    @Operation(summary = "Eliminar categoria", description = "Eliminacion logica de una categoria. Tambien desactiva sus productos y variantes")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Categoria eliminada"),
             @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
@@ -77,6 +78,18 @@ public class CategoryController {
             @Parameter(description = "ID externo de la categoria") @PathVariable UUID externalId) {
         categoryService.delete(externalId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{externalId}/products/count")
+    @PreAuthorize("hasAuthority('CATEGORY_DELETE')")
+    @Operation(summary = "Contar productos asociados", description = "Retorna la cantidad de productos relacionados con la categoria")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cantidad de productos asociados"),
+            @ApiResponse(responseCode = "404", description = "Categoria no encontrada")
+    })
+    public ResponseEntity<RelatedProductsCountDTO> countAssociatedProducts(
+            @Parameter(description = "ID externo de la categoria") @PathVariable UUID externalId) {
+        return ResponseEntity.ok(new RelatedProductsCountDTO(categoryService.countAssociatedProducts(externalId)));
     }
 
     @PatchMapping("/{externalId}/activate")

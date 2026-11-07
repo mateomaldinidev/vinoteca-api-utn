@@ -14,6 +14,11 @@ spring:
     hibernate:
       ddl-auto: update
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
@@ -28,6 +33,8 @@ spring:
 
 app:
   base-url: ${APP_BASE_URL:http://localhost:8080}
+  upload:
+    dir: ${APP_UPLOAD_DIR:uploads}
 
 jwt:
   secret: ${JWT_SECRET}

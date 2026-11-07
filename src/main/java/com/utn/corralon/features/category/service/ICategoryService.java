@@ -12,6 +12,7 @@ public interface ICategoryService {
     CategoryResponseDTO getByExternalId(UUID externalId);
     CategoryResponseDTO update(UUID externalId, CategoryRequestDTO dto);
     void delete(UUID externalId);
+    long countAssociatedProducts(UUID externalId);
     void activate(UUID externalId);
     List<CategoryResponseDTO> getInactive();
 }

@@ -348,5 +348,17 @@ public class OrderService implements IOrderService {
 
         stockMovementRepository.save(movement);
     }
+    @Override
+    public List<OrderSummaryDTO> getOrdersByUserId(UUID userExternalId) {
+
+        UserEntity user = userRepository.findByExternalId(userExternalId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found with ID: ", userExternalId));
+
+        return orderRepository.findByUser_ExternalId(userExternalId)
+                .stream()
+                .map(orderMapper::toSummary)
+                .toList();
+    }
 
 }

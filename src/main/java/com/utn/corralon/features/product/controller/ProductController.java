@@ -94,6 +94,20 @@ public class ProductController {
                 .build();
     }
 
+    @PreAuthorize("hasAuthority('PRODUCT_LIST_INACTIVE')")
+    @GetMapping("/inactive/{externalId}")
+    @Operation(summary = "Obtener producto inactivo por ID", description = "Retorna un producto inactivo por su externalId. Solo para gestion")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto encontrado"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
+    public ResponseEntity<ProductResponseDTO> getInactiveById(
+            @Parameter(description = "ID externo del producto") @PathVariable UUID externalId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(productService.getInactiveByExternalId(externalId));
+    }
+
     @GetMapping("/search")
     @Operation(summary = "Buscar productos activos", description = "Busca productos activos con filtros opcionales")
     public ResponseEntity<List<ProductResponseDTO>> search(

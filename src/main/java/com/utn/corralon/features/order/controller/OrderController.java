@@ -92,4 +92,11 @@ public class OrderController {
 
         return ResponseEntity.ok(orderService.getAdminOrder(externalId));
     }
+    @GetMapping("/admin/user/{userExternalId}")
+    @PreAuthorize("hasAuthority('ORDER_READ_ALL')")
+    public ResponseEntity<List<OrderSummaryDTO>> getOrdersByUser(
+            @PathVariable UUID userExternalId) {
+
+        return ResponseEntity.ok(orderService.getOrdersByUserId(userExternalId));
+    }
 }

@@ -3,6 +3,7 @@ package com.utn.corralon.features.brand.controller;
 import com.utn.corralon.features.brand.dto.BrandRequestDTO;
 import com.utn.corralon.features.brand.dto.BrandResponseDTO;
 import com.utn.corralon.features.brand.service.IBrandService;
+import com.utn.corralon.features.product.dto.RelatedProductsCountDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -67,7 +68,7 @@ public class BrandController {
 
     @DeleteMapping("/{externalId}")
     @PreAuthorize("hasAuthority('BRAND_DELETE')")
-    @Operation(summary = "Eliminar marca", description = "Eliminacion logica de una marca")
+    @Operation(summary = "Eliminar marca", description = "Eliminacion logica de una marca. Tambien desactiva sus productos y variantes")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Marca eliminada"),
             @ApiResponse(responseCode = "404", description = "Marca no encontrada")
@@ -76,6 +77,18 @@ public class BrandController {
             @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId) {
         brandService.delete(externalId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{externalId}/products/count")
+    @PreAuthorize("hasAuthority('BRAND_DELETE')")
+    @Operation(summary = "Contar productos asociados", description = "Retorna la cantidad de productos relacionados con la marca")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cantidad de productos asociados"),
+            @ApiResponse(responseCode = "404", description = "Marca no encontrada")
+    })
+    public ResponseEntity<RelatedProductsCountDTO> countAssociatedProducts(
+            @Parameter(description = "ID externo de la marca") @PathVariable UUID externalId) {
+        return ResponseEntity.ok(new RelatedProductsCountDTO(brandService.countAssociatedProducts(externalId)));
     }
 
     @PatchMapping("/{externalId}/activate")
