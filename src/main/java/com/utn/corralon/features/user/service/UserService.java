@@ -108,6 +108,16 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserResponseDTO getByEmail(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .filter(UserEntity::getActive)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: ", email));
+        CredentialsEntity credentials = credentialsRepository.findByUsername(user.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Credentials not found for user: ", email));
+        return userMapper.toResponse(user, credentials);
+    }
+
+    @Override
     @Transactional
     public UserResponseDTO update(UUID externalId, UserRequestDTO dto) {
         validateAdministrativeRole(dto.getRole());

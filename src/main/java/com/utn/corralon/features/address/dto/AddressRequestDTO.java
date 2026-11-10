@@ -1,7 +1,6 @@
 package com.utn.corralon.features.address.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.UUID;
@@ -28,6 +27,10 @@ public class AddressRequestDTO {
     @NotBlank(message = "Zip code is required")
     private String zipCode;
 
-    @NotNull(message = "User ID cannot be null")
+    /**
+     * Campo mantenido por compatibilidad con clientes existentes.
+     * Nunca se utiliza como fuente de identidad: el propietario de la
+     * dirección siempre se deriva del usuario autenticado (JWT).
+     */
     private UUID userExternalId;
 }

@@ -103,11 +103,17 @@ public class SecurityDataInitializer {
             createOrUpdateRole(
                     Roles.ROLE_EMPLOYEE,
                     List.of(
+                            Permits.PRODUCT_READ,
+                            Permits.PRODUCT_LIST,
+                            Permits.PRODUCT_LIST_INACTIVE,
                             Permits.PRODUCT_CREATE,
                             Permits.PRODUCT_UPDATE,
                             Permits.PRODUCT_DELETE,
                             Permits.PRODUCT_ACTIVATE,
 
+                            Permits.PRODUCT_VARIANT_READ,
+                            Permits.PRODUCT_VARIANT_LIST,
+                            Permits.PRODUCT_VARIANT_LIST_INACTIVE,
                             Permits.PRODUCT_VARIANT_CREATE,
                             Permits.PRODUCT_VARIANT_UPDATE,
                             Permits.PRODUCT_VARIANT_DELETE,
@@ -120,16 +126,25 @@ public class SecurityDataInitializer {
                             Permits.STOCK_MOVEMENT_READ,
                             Permits.STOCK_MOVEMENT_LIST_BY_VARIANT,
 
+                            Permits.CATEGORY_READ,
+                            Permits.CATEGORY_LIST,
+                            Permits.CATEGORY_LIST_INACTIVE,
                             Permits.CATEGORY_CREATE,
                             Permits.CATEGORY_UPDATE,
                             Permits.CATEGORY_DELETE,
                             Permits.CATEGORY_ACTIVATE,
 
+                            Permits.BRAND_READ,
+                            Permits.BRAND_LIST,
+                            Permits.BRAND_LIST_INACTIVE,
                             Permits.BRAND_CREATE,
                             Permits.BRAND_UPDATE,
                             Permits.BRAND_DELETE,
                             Permits.BRAND_ACTIVATE,
 
+                            Permits.SUPPLIER_READ,
+                            Permits.SUPPLIER_LIST,
+                            Permits.SUPPLIER_LIST_INACTIVE,
                             Permits.SUPPLIER_CREATE,
                             Permits.SUPPLIER_UPDATE,
                             Permits.SUPPLIER_DELETE,

@@ -241,6 +241,9 @@ public class CartServiceImpl implements ICartService {
                     itemResponseDTO.setVariantAttribute(
                             cartItemEntity.getProductVariant().getAttribute());
 
+                    itemResponseDTO.setProductVariantExternalId(
+                            cartItemEntity.getProductVariant().getExternalId());
+
                     ProductVariantEntity productVariant = cartItemEntity.getProductVariant();
 
                     BigDecimal unitPrice = calculateUnitPrice(

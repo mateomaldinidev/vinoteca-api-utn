@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,17 @@ public class UserController {
     @Operation(summary = "Listar usuarios", description = "Retorna todos los usuarios del sistema")
     public ResponseEntity<List<UserResponseDTO>> getAll() {
         return ResponseEntity.ok(userService.getAll());
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtener usuario autenticado",
+            description = "Retorna los datos del usuario que realizó la petición, identificado a partir del token JWT")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario autenticado encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) {
+        return ResponseEntity.ok(userService.getByEmail(authentication.getName()));
     }
 
     @GetMapping("/{externalId}")
