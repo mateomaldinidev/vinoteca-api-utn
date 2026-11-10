@@ -11,6 +11,7 @@ public interface IUserService {
     UserResponseDTO register(UserRequestDTO dto);
     List<UserResponseDTO> getAll();
     UserResponseDTO getByExternalId(UUID externalId);
+    UserResponseDTO getByEmail(String email);
     UserResponseDTO update(UUID externalId, UserRequestDTO dto);
     void delete(UUID externalId);
     List<UserResponseDTO> getInactiveUsers();
