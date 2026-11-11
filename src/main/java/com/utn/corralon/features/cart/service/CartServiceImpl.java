@@ -1,5 +1,6 @@
 package com.utn.corralon.features.cart.service;
 
+import com.utn.corralon.exception.BadRequestException;
 import com.utn.corralon.exception.BusinessRuleException;
 import com.utn.corralon.exception.ResourceNotFoundException;
 import com.utn.corralon.exception.StockInsufficientException;
@@ -11,10 +12,10 @@ import com.utn.corralon.features.cart_item.dto.CartItemRequestDTO;
 import com.utn.corralon.features.cart_item.dto.CartItemResponseDTO;
 import com.utn.corralon.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.corralon.features.cart_item.entity.CartItemEntity;
-import com.utn.corralon.features.offer_product.repository.OfferProductRepository;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.enums.DeliveryType;
 import com.utn.corralon.features.order.service.OrderService;
+import com.utn.corralon.features.pricing.service.PricingService;
 import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
 import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
 import com.utn.corralon.features.user.entity.UserEntity;
@@ -26,7 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.Map;
@@ -40,12 +43,14 @@ public class CartServiceImpl implements ICartService {
     private final ProductVariantRepository productVariantRepository;
     private final ModelMapper modelMapper;
     private final OrderService orderService;
-    private final OfferProductRepository offerProductRepository;
+    private final PricingService pricingService;
 
     @Transactional
     @Override
     public CartResponseDTO createOrUpdateCart(String username, CartRequestDTO cartRequest) {
         UserEntity user = getActiveUser(username);
+
+        validateNoDuplicateVariants(cartRequest);
 
         CartEntity cart = cartRepository.findByUser(user)
                 .orElseGet(() -> CartEntity.builder()
@@ -230,10 +235,17 @@ public class CartServiceImpl implements ICartService {
     private CartResponseDTO mapCartToResponseDTO(CartEntity cart) {
         CartResponseDTO responseDTO = modelMapper.map(cart, CartResponseDTO.class);
 
+        responseDTO.setExternalId(cart.getExternalId());
+        responseDTO.setUserExternalId(
+                cart.getUser() != null ? cart.getUser().getExternalId() : null);
+        responseDTO.setLastUpdated(cart.getLastUpdated());
+
         List<CartItemResponseDTO> itemDTOs = cart.getCartItems().stream()
                 .map(cartItemEntity -> {
                     CartItemResponseDTO itemResponseDTO = modelMapper.map(
                             cartItemEntity, CartItemResponseDTO.class);
+
+                    itemResponseDTO.setCartExternalId(cart.getExternalId());
 
                     itemResponseDTO.setProductName(
                             cartItemEntity.getProductVariant().getProduct().getName());
@@ -246,7 +258,7 @@ public class CartServiceImpl implements ICartService {
 
                     ProductVariantEntity productVariant = cartItemEntity.getProductVariant();
 
-                    BigDecimal unitPrice = calculateUnitPrice(
+                    BigDecimal unitPrice = pricingService.calculateUnitPrice(
                             productVariant,
                             cartItemEntity.getQuantity());
 
@@ -280,24 +292,46 @@ public class CartServiceImpl implements ICartService {
         return user;
     }
 
-    private BigDecimal calculateUnitPrice(ProductVariantEntity variant, Integer quantity) {
-
-        BigDecimal offerPrice = offerProductRepository
-                .findActiveOfferForVariant(variant.getExternalId())
-                .map(op -> op.getDiscountedPrice())
-                .orElse(null);
-
-        if (offerPrice != null) {
-            return offerPrice;
+    private void validateNoDuplicateVariants(CartRequestDTO cartRequest) {
+        if (cartRequest == null || cartRequest.getItems() == null) {
+            return;
         }
 
-        if (variant.getWholesaleMinQty() != null
-                && variant.getWholesalePrice() != null
-                && quantity >= variant.getWholesaleMinQty()) {
-            return variant.getWholesalePrice();
-        }
+        Set<UUID> variantIds = new HashSet<>();
 
-        return variant.getPrice();
+        for (CartItemRequestDTO item : cartRequest.getItems()) {
+            if (item == null || item.getProductVariantId() == null) {
+                throw new BadRequestException("Product variant ID cannot be null.");
+            }
+
+            if (!variantIds.add(item.getProductVariantId())) {
+                throw new BadRequestException(
+                        "Duplicate product variant ID in cart: "
+                                + item.getProductVariantId());
+            }
+        }
+    }
+
+    @Transactional
+    @Override
+    public CartResponseDTO removeCartItem(String username, UUID productVariantId) {
+        UserEntity user = getActiveUser(username);
+
+        CartEntity cart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cart not found for user: ", username));
+
+        CartItemEntity cartItemToRemove = cart.getCartItems().stream()
+                .filter(item -> item.getProductVariant().getExternalId().equals(productVariantId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cart item for product variant not found with ID: ", productVariantId));
+
+        cart.removeCartItem(cartItemToRemove);
+
+        CartEntity savedCart = cartRepository.save(cart);
+
+        return mapCartToResponseDTO(savedCart);
     }
 
     @Override

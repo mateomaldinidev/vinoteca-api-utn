@@ -2,6 +2,12 @@ spring:
   application:
     name: corralon
 
+  config:
+    # Carga el .env local (formato properties) para que funcione igual desde
+    # IntelliJ, Maven o spring-boot:run, sin depender de plugin externo.
+    # En Docker las variables se inyectan desde compose.yaml y esto es opcional.
+    import: optional:file:.env[.properties]
+
   datasource:
     # Los valores por defecto (:localhost, :3306, etc.) se usan solo
     # si se corre la app local con mvn spring-boot:run.
@@ -12,7 +18,9 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # El esquema lo administran los scripts de db/manual/etapa2.
+      # validate solo lee metadatos: nunca altera la base.
+      ddl-auto: validate
 
   servlet:
     multipart:

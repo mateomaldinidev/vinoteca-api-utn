@@ -16,8 +16,8 @@ public interface IProductVariantService {
                                      ProductVariantRequestDTO productVariantRequestDTO);
     void delete(UUID externalId);
     void activate(UUID externalId);
-    ProductVariantResponseDTO registerEntry(StockMovementRequestDTO dto);
-    ProductVariantResponseDTO adjustStock(StockMovementRequestDTO dto);
+    ProductVariantResponseDTO registerEntry(StockMovementRequestDTO dto, String username);
+    ProductVariantResponseDTO adjustStock(StockMovementRequestDTO dto, String username);
     Integer getAvailableStock(UUID variantId);
 
 

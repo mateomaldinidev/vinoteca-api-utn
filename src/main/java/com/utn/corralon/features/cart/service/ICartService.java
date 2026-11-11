@@ -19,6 +19,8 @@ public interface ICartService {
             CartItemQuantityUpdateDTO updateDTO
     );
 
+    CartResponseDTO removeCartItem(String username, UUID productVariantId);
+
     CartResponseDTO getCart(String username);
 
     void clearCart(String username);

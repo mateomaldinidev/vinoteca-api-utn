@@ -11,7 +11,6 @@ import com.utn.corralon.features.address.repository.AddressRepository;
 import com.utn.corralon.features.cart.entity.CartEntity;
 import com.utn.corralon.features.cart.repository.CartRepository;
 import com.utn.corralon.features.notifications.service.IEmailService;
-import com.utn.corralon.features.offer_product.repository.OfferProductRepository;
 import com.utn.corralon.features.order.dto.OrderAdminResponseDTO;
 import com.utn.corralon.features.order.enums.DeliveryType;
 import com.utn.corralon.features.order.enums.OrderStatus;
@@ -22,11 +21,9 @@ import com.utn.corralon.features.order.mapper.OrderMapper;
 import com.utn.corralon.features.order.repository.OrderRepository;
 import com.utn.corralon.features.orderItem.entity.OrderItemEntity;
 import com.utn.corralon.features.orderItem.mapper.OrderItemMapper;
+import com.utn.corralon.features.pricing.service.PricingService;
 import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
-import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
-import com.utn.corralon.features.stockMovement.entity.StockMovementEntity;
-import com.utn.corralon.features.stockMovement.enums.StockMovementType;
-import com.utn.corralon.features.stockMovement.repository.StockMovementRepository;
+import com.utn.corralon.features.stockMovement.service.IStockService;
 import com.utn.corralon.features.user.entity.UserEntity;
 import com.utn.corralon.features.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -35,7 +32,6 @@ import com.utn.corralon.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,14 +43,13 @@ public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
     private final CredentialsRepository credentialsRepository;
     private final AddressRepository addressRepository;
     private final CartRepository cartRepository;
-    private final StockMovementRepository stockMovementRepository;
+    private final IStockService stockService;
     private final IEmailService emailService;
-    private final OfferProductRepository offerProductRepository;
+    private final PricingService pricingService;
 
     @Override
     @Transactional
@@ -110,7 +105,7 @@ public class OrderService implements IOrderService {
         );
 
         // =========================
-        // 4. CREAR ITEMS + STOCK
+        // 4. CREAR ITEMS
         // =========================
 
         List<OrderItemEntity> items =
@@ -124,22 +119,11 @@ public class OrderService implements IOrderService {
                                 throw new BusinessRuleException("Product variant is inactive");
                             }
 
-                            if (variant.getStock() < cartItem.getQuantity()) {
-                                throw new BusinessRuleException("Insufficient stock");
-                            }
-
                             BigDecimal unitPrice =
-                                    calculateUnitPrice(variant, cartItem.getQuantity());
+                                    pricingService.calculateUnitPrice(variant, cartItem.getQuantity());
 
                             BigDecimal subtotal =
                                     unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-
-                            // descontar stock
-                            variant.setStock(variant.getStock() - cartItem.getQuantity());
-                            productVariantRepository.save(variant);
-
-                            // movimiento stock
-                            createStockMovement(variant, cartItem.getQuantity(), StockMovementType.SALE, "Stock discounted by order creation");
 
                             return orderItemMapper.toEntity(order, variant, cartItem.getQuantity(), unitPrice, subtotal);
                         })
@@ -159,10 +143,23 @@ public class OrderService implements IOrderService {
         // (NO seteamos status acá porque ya lo maneja el mapper)
 
         // =========================
-        // 6. PERSISTENCIA
+        // 6. PERSISTENCIA + STOCK
         // =========================
 
         OrderEntity savedOrder = orderRepository.save(order);
+
+        // El pedido y sus items ya tienen ID: el descuento de stock queda
+        // trazado con orderId y orderItemId en la misma transaccion.
+        for (OrderItemEntity item : savedOrder.getItems()) {
+            stockService.registerSale(
+                    item.getProductVariant().getExternalId(),
+                    item.getQuantity(),
+                    savedOrder.getId(),
+                    item.getId(),
+                    savedOrder.getUser().getId(),
+                    "Stock discounted by order creation"
+            );
+        }
 
         OrderResponseDTO responseDTO = orderMapper.toResponseDTO(savedOrder);
 
@@ -277,7 +274,7 @@ public class OrderService implements IOrderService {
             throw new BusinessRuleException("Paid orders cannot be cancelled");
         }
 
-        restoreStock(order);
+        restoreStock(order, resolveUserId(username));
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
 
@@ -291,43 +288,19 @@ public class OrderService implements IOrderService {
         );
     }
 
-    private void restoreStock(OrderEntity order) {
+    private void restoreStock(OrderEntity order, Long createdByUserId) {
 
         for (OrderItemEntity item : order.getItems()) {
 
-            ProductVariantEntity variant = item.getProductVariant();
-
-            variant.setStock(variant.getStock() + item.getQuantity());
-
-            productVariantRepository.save(variant);
-
-            createStockMovement(
-                    variant,
+            stockService.restoreStock(
+                    item.getProductVariant().getExternalId(),
                     item.getQuantity(),
-                    StockMovementType.CANCELLATION,
+                    order.getId(),
+                    item.getId(),
+                    createdByUserId,
                     "Stock restored by order cancellation"
             );
         }
-    }
-
-    private BigDecimal calculateUnitPrice(ProductVariantEntity variant, Integer quantity) {
-
-        BigDecimal offerPrice = offerProductRepository
-                .findActiveOfferForVariant(variant.getExternalId())
-                .map(op -> op.getDiscountedPrice())
-                .orElse(null);
-
-        if (offerPrice != null) {
-            return offerPrice;
-        }
-
-        if (variant.getWholesaleMinQty() != null
-                && variant.getWholesalePrice() != null
-                && quantity >= variant.getWholesaleMinQty()) {
-            return variant.getWholesalePrice();
-        }
-
-        return variant.getPrice();
     }
 
     private UserEntity findUser(UUID externalId) {
@@ -337,16 +310,13 @@ public class OrderService implements IOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", externalId));
     }
 
-    private void createStockMovement(ProductVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
+    private Long resolveUserId(String username) {
+        if (username == null) {
+            return null;
+        }
+        return userRepository.findByEmail(username)
+                .map(UserEntity::getId)
+                .orElse(null);
     }
     @Override
     public List<OrderSummaryDTO> getOrdersByUserId(UUID userExternalId) {

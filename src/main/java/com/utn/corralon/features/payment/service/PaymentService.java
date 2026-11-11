@@ -16,11 +16,9 @@ import com.utn.corralon.features.payment.entity.PaymentEntity;
 import com.utn.corralon.features.payment.entity.PaymentStatus;
 import com.utn.corralon.features.payment.mapper.PaymentMapper;
 import com.utn.corralon.features.payment.repository.PaymentRepository;
-import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
-import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
-import com.utn.corralon.features.stockMovement.entity.StockMovementEntity;
-import com.utn.corralon.features.stockMovement.enums.StockMovementType;
-import com.utn.corralon.features.stockMovement.repository.StockMovementRepository;
+import com.utn.corralon.features.stockMovement.service.IStockService;
+import com.utn.corralon.features.user.entity.UserEntity;
+import com.utn.corralon.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +33,11 @@ public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
-    private final StockMovementRepository stockMovementRepository;
+    private final IStockService stockService;
 
     @Override
     public PaymentResponseDTO pay(
@@ -103,7 +101,7 @@ public class PaymentService implements IPaymentService {
         payment.setPaymentStatus(PaymentStatus.REJECTED);
         order.setStatus(OrderStatus.CANCELLED);
 
-        restoreStock(order);
+        restoreStock(order, resolveUserId(username));
 
         orderRepository.save(order);
         paymentRepository.save(payment);
@@ -121,42 +119,28 @@ public class PaymentService implements IPaymentService {
     }
 
     // STOCK ROLLBACK
-    private void restoreStock(OrderEntity order) {
+    private void restoreStock(OrderEntity order, Long createdByUserId) {
 
         for (OrderItemEntity item : order.getItems()) {
 
-            ProductVariantEntity variant = item.getProductVariant();
-
-            variant.setStock(
-                    variant.getStock() + item.getQuantity()
-            );
-
-            productVariantRepository.save(variant);
-
-            createStockMovement(
-                    variant,
+            stockService.restoreStock(
+                    item.getProductVariant().getExternalId(),
                     item.getQuantity(),
-                    StockMovementType.CANCELLATION,
+                    order.getId(),
+                    item.getId(),
+                    createdByUserId,
                     "Stock restored by payment rejection"
             );
         }
     }
 
-    private void createStockMovement(
-            ProductVariantEntity variant,
-            Integer quantity,
-            StockMovementType type,
-            String reason) {
-
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
+    private Long resolveUserId(String username) {
+        if (username == null) {
+            return null;
+        }
+        return userRepository.findByEmail(username)
+                .map(UserEntity::getId)
+                .orElse(null);
     }
 
     // SIMULACIÓN TARJETA

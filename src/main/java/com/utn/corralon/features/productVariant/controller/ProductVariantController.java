@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -166,11 +167,12 @@ public class ProductVariantController {
     @Operation(summary = "Registrar entrada de stock", description = "Registra una entrada de stock para una variante")
     @ApiResponse(responseCode = "200", description = "Entrada de stock registrada")
     public ResponseEntity<ProductVariantResponseDTO> registerEntry(
-            @RequestBody StockMovementRequestDTO dto)
+            @RequestBody StockMovementRequestDTO dto,
+            Authentication authentication)
     {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(productVariantService.registerEntry(dto));
+                .body(productVariantService.registerEntry(dto, authentication.getName()));
     }
 
     @PostMapping("/stock/adjustment")
@@ -178,11 +180,12 @@ public class ProductVariantController {
     @Operation(summary = "Ajustar stock", description = "Realiza un ajuste de stock para una variante")
     @ApiResponse(responseCode = "200", description = "Stock ajustado")
     public ResponseEntity<ProductVariantResponseDTO> adjustStock(
-            @RequestBody StockMovementRequestDTO dto)
+            @RequestBody StockMovementRequestDTO dto,
+            Authentication authentication)
     {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(productVariantService.adjustStock(dto));
+                .body(productVariantService.adjustStock(dto, authentication.getName()));
     }
 
     @GetMapping("/{externalId}/stock")

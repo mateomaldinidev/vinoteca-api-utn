@@ -77,6 +77,26 @@ public class CartController {
         );
     }
 
+    @DeleteMapping("/items/{productVariantId}")
+    @PreAuthorize("hasAuthority('CART_UPDATE_ITEM_QUANTITY')")
+    @Operation(summary = "Eliminar item del carrito", description = "Elimina una variante de producto del carrito del usuario autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Item eliminado y carrito actualizado"),
+            @ApiResponse(responseCode = "404", description = "Carrito o item no encontrado")
+    })
+    public ResponseEntity<CartResponseDTO> removeCartItem(
+            @Parameter(description = "ID externo de la variante de producto")
+            @PathVariable UUID productVariantId,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                cartService.removeCartItem(
+                        authentication.getName(),
+                        productVariantId
+                )
+        );
+    }
+
     @DeleteMapping
     @PreAuthorize("hasAuthority('CART_CLEAR')")
     @Operation(summary = "Vaciar carrito", description = "Elimina todos los items del carrito del usuario autenticado")

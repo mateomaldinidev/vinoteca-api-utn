@@ -43,4 +43,19 @@ public class StockMovementEntity {
     @JoinColumn(name = "variantId", nullable = false)
     private ProductVariantEntity variant;
 
+    // Trazabilidad de pedido y autor (NULL en movimientos historicos o manuales).
+    // Se mapean como IDs escalares: son columnas de auditoria opcionales, sin navegacion
+    // de entidades en esta etapa. Las FKs y el CHECK compuesto los garantiza la base.
+    @Column(name = "orderId")
+    private Long orderId;
+
+    @Column(name = "orderItemId")
+    private Long orderItemId;
+
+    @Column(name = "resultingStock")
+    private Integer resultingStock;
+
+    @Column(name = "createdByUserId")
+    private Long createdByUserId;
+
 }
