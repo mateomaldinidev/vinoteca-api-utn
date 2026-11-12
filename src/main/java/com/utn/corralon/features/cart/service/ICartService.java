@@ -2,6 +2,7 @@ package com.utn.corralon.features.cart.service;
 
 import com.utn.corralon.features.cart.dto.CartRequestDTO;
 import com.utn.corralon.features.cart.dto.CartResponseDTO;
+import com.utn.corralon.features.cart.dto.CheckoutResultDTO;
 import com.utn.corralon.features.cart.entity.CartEntity;
 import com.utn.corralon.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
@@ -29,6 +30,13 @@ public interface ICartService {
             String username,
             UUID addressId,
             DeliveryType deliveryType
+    );
+
+    CheckoutResultDTO checkout(
+            String username,
+            UUID addressId,
+            DeliveryType deliveryType,
+            String idempotencyKey
     );
 
     CartEntity getCartEntity(String username);

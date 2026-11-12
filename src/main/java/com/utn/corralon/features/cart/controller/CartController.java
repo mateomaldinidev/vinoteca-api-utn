@@ -2,6 +2,7 @@ package com.utn.corralon.features.cart.controller;
 
 import com.utn.corralon.features.cart.dto.CartRequestDTO;
 import com.utn.corralon.features.cart.dto.CartResponseDTO;
+import com.utn.corralon.features.cart.dto.CheckoutResultDTO;
 import com.utn.corralon.features.cart.service.ICartService;
 import com.utn.corralon.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
@@ -110,24 +111,30 @@ public class CartController {
 
     @PostMapping("/checkout")
     @PreAuthorize("hasAuthority('CART_CHECKOUT')")
-    @Operation(summary = "Finalizar compra", description = "Convierte el carrito del usuario autenticado en una orden")
+    @Operation(summary = "Finalizar compra", description = "Convierte el carrito del usuario autenticado en una orden con soporte de idempotencia")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Orden creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Error en el checkout")
+            @ApiResponse(responseCode = "200", description = "Orden recuperada por reintento idempotente"),
+            @ApiResponse(responseCode = "400", description = "Error en el checkout o encabezado invalido"),
+            @ApiResponse(responseCode = "409", description = "Conflicto de idempotencia o reglas de negocio")
     })
     public ResponseEntity<OrderResponseDTO> checkout(
+            @Parameter(description = "Clave de idempotencia obligatoria para pedidos nuevos")
+            @RequestHeader("Idempotency-Key") String idempotencyKey,
             @Parameter(description = "Tipo de entrega")
             @RequestParam DeliveryType deliveryType,
             @Parameter(description = "ID de la direccion de entrega (opcional para retiro en tienda)")
             @RequestParam(required = false) UUID addressId,
             Authentication authentication) {
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(cartService.checkout(
-                        authentication.getName(),
-                        addressId,
-                        deliveryType
-                ));
+        CheckoutResultDTO result = cartService.checkout(
+                authentication.getName(),
+                addressId,
+                deliveryType,
+                idempotencyKey
+        );
+
+        HttpStatus status = result.isReplay() ? HttpStatus.OK : HttpStatus.CREATED;
+        return ResponseEntity.status(status).body(result.getOrder());
     }
 }

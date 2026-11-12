@@ -6,6 +6,7 @@ import com.utn.corralon.exception.ResourceNotFoundException;
 import com.utn.corralon.exception.StockInsufficientException;
 import com.utn.corralon.features.cart.dto.CartRequestDTO;
 import com.utn.corralon.features.cart.dto.CartResponseDTO;
+import com.utn.corralon.features.cart.dto.CheckoutResultDTO;
 import com.utn.corralon.features.cart.entity.CartEntity;
 import com.utn.corralon.features.cart.repository.CartRepository;
 import com.utn.corralon.features.cart_item.dto.CartItemRequestDTO;
@@ -13,28 +14,34 @@ import com.utn.corralon.features.cart_item.dto.CartItemResponseDTO;
 import com.utn.corralon.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.corralon.features.cart_item.entity.CartItemEntity;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
+import com.utn.corralon.features.order.entity.OrderEntity;
 import com.utn.corralon.features.order.enums.DeliveryType;
+import com.utn.corralon.features.order.mapper.OrderMapper;
+import com.utn.corralon.features.order.repository.OrderRepository;
 import com.utn.corralon.features.order.service.OrderService;
+import com.utn.corralon.features.order.util.CheckoutCanonicalPayload;
 import com.utn.corralon.features.pricing.service.PricingService;
 import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
 import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
 import com.utn.corralon.features.user.entity.UserEntity;
 import com.utn.corralon.features.user.repository.UserRepository;
-import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.Map;
 
-@AllArgsConstructor
 @Service
 public class CartServiceImpl implements ICartService {
 
@@ -44,6 +51,48 @@ public class CartServiceImpl implements ICartService {
     private final ModelMapper modelMapper;
     private final OrderService orderService;
     private final PricingService pricingService;
+    private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper;
+    private final PlatformTransactionManager transactionManager;
+    private TransactionTemplate transactionTemplate;
+
+    public CartServiceImpl(
+            CartRepository cartRepository,
+            UserRepository userRepository,
+            ProductVariantRepository productVariantRepository,
+            ModelMapper modelMapper,
+            OrderService orderService,
+            PricingService pricingService,
+            OrderRepository orderRepository,
+            OrderMapper orderMapper,
+            PlatformTransactionManager transactionManager) {
+        this.cartRepository = cartRepository;
+        this.userRepository = userRepository;
+        this.productVariantRepository = productVariantRepository;
+        this.modelMapper = modelMapper;
+        this.orderService = orderService;
+        this.pricingService = pricingService;
+        this.orderRepository = orderRepository;
+        this.orderMapper = orderMapper;
+        this.transactionManager = transactionManager;
+        this.transactionTemplate = transactionManager != null ? new TransactionTemplate(transactionManager) : null;
+    }
+
+    // Visible para tests unitarios
+    void setTransactionTemplate(TransactionTemplate transactionTemplate) {
+        this.transactionTemplate = transactionTemplate;
+    }
+
+    protected TransactionTemplate getTransactionTemplate() {
+        if (this.transactionTemplate != null) {
+            return this.transactionTemplate;
+        }
+        if (this.transactionManager != null) {
+            this.transactionTemplate = new TransactionTemplate(this.transactionManager);
+            return this.transactionTemplate;
+        }
+        return new TransactionTemplate();
+    }
 
     @Transactional
     @Override
@@ -343,25 +392,105 @@ public class CartServiceImpl implements ICartService {
                         new ResourceNotFoundException("Cart not found for user: ", username));
     }
 
-    @Transactional
     @Override
     public OrderResponseDTO checkout(
             String username,
             UUID addressId,
             DeliveryType deliveryType) {
+        // Compatibilidad: delega en el checkout idempotente, que administra
+        // la transaccion y los locks pesimistas.
+        return checkout(username, addressId, deliveryType, UUID.randomUUID().toString()).getOrder();
+    }
 
-        CartEntity cart = getCartEntity(username);
+    @Override
+    public CheckoutResultDTO checkout(
+            String username,
+            UUID addressId,
+            DeliveryType deliveryType,
+            String idempotencyKey) {
 
-        if (cart.getCartItems().isEmpty()) {
-            throw new BusinessRuleException("Cart is empty");
+        validateIdempotencyKey(idempotencyKey);
+        UserEntity user = getActiveUser(username);
+        String requestHash = CheckoutCanonicalPayload.computeHash(deliveryType, addressId);
+
+        // 1. Idempotencia: buscar primero si existe un pedido para el usuario y esa clave,
+        // incluso si el carrito ya esta vacio.
+        Optional<OrderEntity> existingOrderOpt = orderRepository.findByUserAndIdempotencyKey(user, idempotencyKey);
+        if (existingOrderOpt.isPresent()) {
+            return resolveExistingOrder(existingOrderOpt.get(), requestHash);
         }
 
-        OrderResponseDTO order = orderService.createFromCart(
-                cart, addressId, deliveryType);
+        // 2. Ejecutar checkout dentro de una transaccion con locks pesimistas
+        try {
+            TransactionTemplate template = getTransactionTemplate();
+            return template.execute(status -> {
+                // Bloqueo pesimista sobre el carrito
+                CartEntity cart = cartRepository.findByUserForUpdate(user)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: ", username));
 
-        cart.getCartItems().clear();
-        cartRepository.save(cart);
+                // Revalidacion de idempotencia DESPUES de adquirir el lock:
+                // otra solicitud concurrente con la misma clave pudo haber
+                // creado la orden y vaciado el carrito mientras esperabamos.
+                Optional<OrderEntity> concurrentOrder = orderRepository
+                        .findByUserAndIdempotencyKey(user, idempotencyKey);
+                if (concurrentOrder.isPresent()) {
+                    return resolveExistingOrder(concurrentOrder.get(), requestHash);
+                }
 
-        return order;
+                if (cart.getCartItems() == null || cart.getCartItems().isEmpty()) {
+                    throw new BusinessRuleException("Cart is empty");
+                }
+
+                // Bloquear las variantes involucradas en orden deterministico
+                lockVariantsInDeterministicOrder(cart);
+
+                // Crear orden con idempotencia y descontar stock
+                OrderResponseDTO orderResponse = orderService.createFromCart(
+                        cart, addressId, deliveryType, idempotencyKey, requestHash);
+
+                // Vaciar el carrito
+                cart.getCartItems().clear();
+                cartRepository.save(cart);
+
+                return new CheckoutResultDTO(orderResponse, false);
+            });
+        } catch (DataIntegrityViolationException ex) {
+            // Carrera concurrente en UNIQUE KEY (user_id, idempotency_key): releer y resolver
+            return orderRepository.findByUserAndIdempotencyKey(user, idempotencyKey)
+                    .map(order -> resolveExistingOrder(order, requestHash))
+                    .orElseThrow(() -> ex);
+        }
+    }
+
+    private void validateIdempotencyKey(String idempotencyKey) {
+        if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
+            throw new BadRequestException("Idempotency-Key header is required");
+        }
+        if (idempotencyKey.length() > 255) {
+            throw new BadRequestException("Idempotency-Key exceeds maximum length of 255 characters");
+        }
+    }
+
+    private CheckoutResultDTO resolveExistingOrder(OrderEntity order, String requestHash) {
+        if (!requestHash.equals(order.getCheckoutRequestHash())) {
+            throw new BusinessRuleException("Idempotency-Key already used with different checkout parameters");
+        }
+
+        // El repositorio carga anticipadamente items, user y address para que
+        // el mapeo no dependa del contexto web (OSIV) ni de una sesion abierta.
+        return new CheckoutResultDTO(orderMapper.toResponseDTO(order), true);
+    }
+
+    private void lockVariantsInDeterministicOrder(CartEntity cart) {
+        List<UUID> sortedVariantIds = cart.getCartItems().stream()
+                .map(item -> item.getProductVariant().getExternalId())
+                .distinct()
+                .sorted()
+                .toList();
+
+        for (UUID variantId : sortedVariantIds) {
+            productVariantRepository.findByExternalIdForUpdate(variantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: ", variantId));
+        }
     }
 }

@@ -12,6 +12,7 @@ public interface IProductVariantService {
 
     ProductVariantResponseDTO getById(UUID externalId);
     ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO);
+    ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO, String username);
     ProductVariantResponseDTO update(UUID externalId,
                                      ProductVariantRequestDTO productVariantRequestDTO);
     void delete(UUID externalId);

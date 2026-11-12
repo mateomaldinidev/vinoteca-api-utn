@@ -22,6 +22,16 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleBusinessRule_shouldMapIdempotencyConflictTo409() {
+        ResponseEntity<String> response = handler.handleBusinessRule(
+                new BusinessRuleException(
+                        "Idempotency-Key already used with different checkout parameters"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).contains("Idempotency-Key");
+    }
+
+    @Test
     void handleResourceNotFound_shouldMapMissingCartItemTo404() {
         UUID variantId = UUID.randomUUID();
 

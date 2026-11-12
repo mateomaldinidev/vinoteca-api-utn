@@ -17,6 +17,8 @@ import com.utn.corralon.features.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,6 +40,17 @@ public class ProductVariantService implements IProductVariantService {
     @Transactional
     @Override
     public ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO) {
+        String username = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            username = authentication.getName();
+        }
+        return create(productVariantRequestDTO, username);
+    }
+
+    @Transactional
+    @Override
+    public ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO, String username) {
         ProductEntity product = productRepository.findByExternalId(productVariantRequestDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found. ID: ", productVariantRequestDTO.getProductId()));
 
@@ -50,8 +63,26 @@ public class ProductVariantService implements IProductVariantService {
 
         validateWholesaleConfig(productVariantRequestDTO);
 
+        Integer initialStock = productVariantRequestDTO.getStock() != null ? productVariantRequestDTO.getStock() : 0;
+        if (initialStock < 0) {
+            throw new BusinessRuleException("Stock cannot be negative");
+        }
+
         ProductVariantEntity variant = productVariantMapper.toEntity(productVariantRequestDTO, product);
-        productVariantRepository.save(variant);
+        // El stock inicial se inicializa en 0 para que sea StockService el unico
+        // responsable de aplicar el incremento de stock y registrar el resultingStock en su movimiento ENTRY.
+        variant.setStock(0);
+        variant = productVariantRepository.save(variant);
+
+        if (initialStock > 0) {
+            variant = stockService.registerEntry(
+                    variant.getExternalId(),
+                    initialStock,
+                    "Stock inicial",
+                    resolveUserId(username)
+            );
+        }
+
         return productVariantMapper.toResponse(variant);
     }
 

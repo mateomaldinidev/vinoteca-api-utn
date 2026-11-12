@@ -54,6 +54,17 @@ public class OrderService implements IOrderService {
     @Override
     @Transactional
     public OrderResponseDTO createFromCart(CartEntity cart, UUID addressId, DeliveryType deliveryType) {
+        return createFromCart(cart, addressId, deliveryType, null, null);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDTO createFromCart(
+            CartEntity cart,
+            UUID addressId,
+            DeliveryType deliveryType,
+            String idempotencyKey,
+            String checkoutRequestHash) {
 
         // =========================
         // 1. VALIDACIONES DE DOMINIO
@@ -103,6 +114,17 @@ public class OrderService implements IOrderService {
                 address,
                 deliveryType
         );
+        order.setIdempotencyKey(idempotencyKey);
+        order.setCheckoutRequestHash(checkoutRequestHash);
+
+        if (address != null) {
+            order.setDeliveryStreet(address.getStreet());
+            order.setDeliveryStreetNumber(address.getStreetNumber());
+            order.setDeliveryFloor(address.getFloor());
+            order.setDeliveryApartmentNumber(address.getApartmentNumber());
+            order.setDeliveryCity(address.getCity());
+            order.setDeliveryZipCode(address.getZipCode());
+        }
 
         // =========================
         // 4. CREAR ITEMS
@@ -115,7 +137,7 @@ public class OrderService implements IOrderService {
 
                             ProductVariantEntity variant = cartItem.getProductVariant();
 
-                            if (!variant.getActive()) {
+                            if (!Boolean.TRUE.equals(variant.getActive())) {
                                 throw new BusinessRuleException("Product variant is inactive");
                             }
 
@@ -125,7 +147,12 @@ public class OrderService implements IOrderService {
                             BigDecimal subtotal =
                                     unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
 
-                            return orderItemMapper.toEntity(order, variant, cartItem.getQuantity(), unitPrice, subtotal);
+                            OrderItemEntity orderItem = orderItemMapper.toEntity(order, variant, cartItem.getQuantity(), unitPrice, subtotal);
+                            if (variant.getProduct() != null) {
+                                orderItem.setProductNameSnapshot(variant.getProduct().getName());
+                            }
+                            orderItem.setVariantAttributeSnapshot(variant.getAttribute());
+                            return orderItem;
                         })
                         .toList();
 
@@ -147,6 +174,7 @@ public class OrderService implements IOrderService {
         // =========================
 
         OrderEntity savedOrder = orderRepository.save(order);
+        orderRepository.flush();
 
         // El pedido y sus items ya tienen ID: el descuento de stock queda
         // trazado con orderId y orderItemId en la misma transaccion.

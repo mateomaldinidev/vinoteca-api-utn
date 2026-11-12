@@ -51,11 +51,14 @@ public class ProductVariantController {
     @ApiResponse(responseCode = "201", description = "Variante creada exitosamente")
     public ResponseEntity<ProductVariantResponseDTO> create(
             @Valid
-            @RequestBody ProductVariantRequestDTO productVariantRequestDTO)
+            @RequestBody ProductVariantRequestDTO productVariantRequestDTO,
+            Authentication authentication)
     {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(productVariantService.create(productVariantRequestDTO));
+                .body(productVariantService.create(
+                        productVariantRequestDTO,
+                        authentication != null ? authentication.getName() : null));
     }
 
     @PutMapping("/{externalId}")
