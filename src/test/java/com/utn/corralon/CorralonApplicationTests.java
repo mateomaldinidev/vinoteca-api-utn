@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(properties = "spring.docker.compose.enabled=false")
+@SpringBootTest(properties = {
+		"spring.docker.compose.enabled=false",
+		"app.orders.expiration.enabled=false"
+})
 class CorralonApplicationTests {
 
 	// Evita que SecurityDataInitializer escriba roles/permisos en la base real

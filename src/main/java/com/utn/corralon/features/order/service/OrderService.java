@@ -12,8 +12,8 @@ import com.utn.corralon.features.cart.entity.CartEntity;
 import com.utn.corralon.features.cart.repository.CartRepository;
 import com.utn.corralon.features.notifications.service.IEmailService;
 import com.utn.corralon.features.order.dto.OrderAdminResponseDTO;
+import com.utn.corralon.features.order.enums.CancellationReason;
 import com.utn.corralon.features.order.enums.DeliveryType;
-import com.utn.corralon.features.order.enums.OrderStatus;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.dto.OrderSummaryDTO;
 import com.utn.corralon.features.order.entity.OrderEntity;
@@ -28,7 +28,6 @@ import com.utn.corralon.features.user.entity.UserEntity;
 import com.utn.corralon.features.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import com.utn.corralon.exception.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -50,6 +49,7 @@ public class OrderService implements IOrderService {
     private final IStockService stockService;
     private final IEmailService emailService;
     private final PricingService pricingService;
+    private final IOrderLifecycleService orderLifecycleService;
 
     @Override
     @Transactional
@@ -267,8 +267,11 @@ public class OrderService implements IOrderService {
     @Transactional
     public void cancelOrder(UUID externalId, String username) {
 
-        OrderEntity order = orderRepository
-                .findByExternalId(externalId)
+        // Se consulta solo el email del dueño para autorizar. El pedido se
+        // carga con lock dentro de OrderLifecycleService, evitando reutilizar
+        // una entidad potencialmente desactualizada.
+        String ownerEmail = orderRepository
+                .findOwnerEmailByExternalId(externalId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Order not found with ID: ", externalId));
 
@@ -285,7 +288,7 @@ public class OrderService implements IOrderService {
                 .anyMatch(r -> r.getRole() == Roles.ROLE_CUSTOMER);
 
         if (isCustomer && !isAdminOrEmployee) {
-            if (!order.getUser().getEmail().equals(username)) {
+            if (!ownerEmail.equals(username)) {
                 throw new UnauthorizedException("You can only cancel your own orders");
             }
         }
@@ -294,41 +297,15 @@ public class OrderService implements IOrderService {
             throw new UnauthorizedException("You are not allowed to cancel orders");
         }
 
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            throw new BadRequestException("Order is already cancelled");
-        }
+        CancellationReason reason = isAdminOrEmployee
+                ? CancellationReason.ADMIN_CANCELLED
+                : CancellationReason.USER_CANCELLED;
 
-        if (order.getStatus() == OrderStatus.PAID) {
-            throw new BusinessRuleException("Paid orders cannot be cancelled");
-        }
-
-        restoreStock(order, resolveUserId(username));
-        order.setStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
-
-        OrderResponseDTO orderDTO = orderMapper.toResponseDTO(order);
-
-        emailService.sendOrderCancelledEmail(
-                order.getUser().getEmail(),
-                order.getUser().getName(),
-                orderDTO,
-                "Order cancelled"
+        orderLifecycleService.cancelPendingOrder(
+                externalId,
+                reason,
+                resolveUserId(username)
         );
-    }
-
-    private void restoreStock(OrderEntity order, Long createdByUserId) {
-
-        for (OrderItemEntity item : order.getItems()) {
-
-            stockService.restoreStock(
-                    item.getProductVariant().getExternalId(),
-                    item.getQuantity(),
-                    order.getId(),
-                    item.getId(),
-                    createdByUserId,
-                    "Stock restored by order cancellation"
-            );
-        }
     }
 
     private UserEntity findUser(UUID externalId) {

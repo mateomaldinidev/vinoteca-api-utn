@@ -6,17 +6,17 @@ import com.utn.corralon.exception.UnauthorizedException;
 import com.utn.corralon.features.notifications.service.IEmailService;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.entity.OrderEntity;
+import com.utn.corralon.features.order.enums.CancellationReason;
 import com.utn.corralon.features.order.enums.OrderStatus;
 import com.utn.corralon.features.order.mapper.OrderMapper;
 import com.utn.corralon.features.order.repository.OrderRepository;
-import com.utn.corralon.features.orderItem.entity.OrderItemEntity;
+import com.utn.corralon.features.order.service.IOrderLifecycleService;
 import com.utn.corralon.features.payment.dto.PaymentRequestDTO;
 import com.utn.corralon.features.payment.dto.PaymentResponseDTO;
 import com.utn.corralon.features.payment.entity.PaymentEntity;
 import com.utn.corralon.features.payment.entity.PaymentStatus;
 import com.utn.corralon.features.payment.mapper.PaymentMapper;
 import com.utn.corralon.features.payment.repository.PaymentRepository;
-import com.utn.corralon.features.stockMovement.service.IStockService;
 import com.utn.corralon.features.user.entity.UserEntity;
 import com.utn.corralon.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class PaymentService implements IPaymentService {
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
-    private final IStockService stockService;
+    private final IOrderLifecycleService orderLifecycleService;
 
     @Override
     public PaymentResponseDTO pay(
@@ -45,7 +45,9 @@ public class PaymentService implements IPaymentService {
             String username,
             boolean isAdmin) {
 
-        OrderEntity order = orderRepository.findByExternalId(request.getOrderId())
+        // El lock serializa pago, cancelacion manual y vencimiento. La
+        // revalidacion ocurre despues de obtenerlo.
+        OrderEntity order = orderRepository.findByExternalIdForUpdate(request.getOrderId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Order not found with ID: ",
@@ -60,6 +62,12 @@ public class PaymentService implements IPaymentService {
         // Verificar que la orden esté pendiente de pago
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BusinessRuleException("Order is not pending payment");
+        }
+
+        // Un pedido vencido no debe aceptar pagos. Se deja que el scheduler
+        // lo cancele para no cancelar dentro de una transaccion que falla.
+        if (isExpired(order, LocalDateTime.now())) {
+            throw new BusinessRuleException("Order has expired");
         }
 
         // Crear payment en estado PENDING
@@ -97,41 +105,25 @@ public class PaymentService implements IPaymentService {
             return paymentMapper.toDTO(payment);
         }
 
-        // CASO REJECTED: restaurar stock y cancelar orden
+        // CASO REJECTED: la cancelacion (motivo + restauracion de stock)
+        // queda centralizada en OrderLifecycleService y dentro de esta misma
+        // transaccion.
         payment.setPaymentStatus(PaymentStatus.REJECTED);
-        order.setStatus(OrderStatus.CANCELLED);
 
-        restoreStock(order, resolveUserId(username));
-
-        orderRepository.save(order);
-        paymentRepository.save(payment);
-
-        OrderResponseDTO orderDTO = orderMapper.toResponseDTO(order);
-
-        emailService.sendOrderCancelledEmail(
-                order.getUser().getEmail(),
-                order.getUser().getName(),
-                orderDTO,
-                "Payment was rejected"
+        orderLifecycleService.cancelLockedOrder(
+                order,
+                CancellationReason.PAYMENT_REJECTED,
+                resolveUserId(username)
         );
+
+        paymentRepository.save(payment);
 
         return paymentMapper.toDTO(payment);
     }
 
-    // STOCK ROLLBACK
-    private void restoreStock(OrderEntity order, Long createdByUserId) {
-
-        for (OrderItemEntity item : order.getItems()) {
-
-            stockService.restoreStock(
-                    item.getProductVariant().getExternalId(),
-                    item.getQuantity(),
-                    order.getId(),
-                    item.getId(),
-                    createdByUserId,
-                    "Stock restored by payment rejection"
-            );
-        }
+    private boolean isExpired(OrderEntity order, LocalDateTime referenceTime) {
+        return order.getExpiresAt() != null
+                && !referenceTime.isBefore(order.getExpiresAt());
     }
 
     private Long resolveUserId(String username) {
@@ -144,7 +136,8 @@ public class PaymentService implements IPaymentService {
     }
 
     // SIMULACIÓN TARJETA
-    private PaymentStatus simulateCard(PaymentRequestDTO request) {
+    // Package-private para poder fijar el resultado en los tests.
+    PaymentStatus simulateCard(PaymentRequestDTO request) {
 
         return Math.random() > 0.3
                 ? PaymentStatus.APPROVED
