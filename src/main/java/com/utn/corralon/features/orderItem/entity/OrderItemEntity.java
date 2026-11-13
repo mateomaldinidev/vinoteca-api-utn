@@ -34,6 +34,13 @@ public class OrderItemEntity {
     @JoinColumn(name="product_variant_id",nullable = false)
     private ProductVariantEntity productVariant;
 
+    // Snapshots al momento de crear el pedido (NULL en pedidos historicos).
+    @Column(name = "productNameSnapshot", length = 255)
+    private String productNameSnapshot;
+
+    @Column(name = "variantAttributeSnapshot", length = 255)
+    private String variantAttributeSnapshot;
+
     @Column(name="quantity",nullable = false)
     private Integer quantity;
 

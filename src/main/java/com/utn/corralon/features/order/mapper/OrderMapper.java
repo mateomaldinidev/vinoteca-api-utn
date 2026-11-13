@@ -7,6 +7,7 @@ import com.utn.corralon.features.order.enums.DeliveryType;
 import com.utn.corralon.features.order.enums.OrderStatus;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.entity.OrderEntity;
+import com.utn.corralon.features.order.util.OrderExpirationPolicy;
 import com.utn.corralon.features.orderItem.mapper.OrderItemMapper;
 import com.utn.corralon.features.user.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,15 @@ public class OrderMapper {
     public OrderEntity toEntity(UserEntity user, AddressEntity address, DeliveryType deliveryType)
     {
 
+        LocalDateTime createdAt = LocalDateTime.now();
+
         OrderEntity order =
                 OrderEntity.builder()
                         .user(user)
                         .address(address)
                         .deliveryType(deliveryType)
-                        .createdAt(LocalDateTime.now())
+                        .createdAt(createdAt)
+                        .expiresAt(OrderExpirationPolicy.calculateExpiresAt(createdAt))
                         .status(OrderStatus.PENDING_PAYMENT)
                         .build();
 

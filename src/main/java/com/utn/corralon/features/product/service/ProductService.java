@@ -159,7 +159,7 @@ public class ProductService implements IProductService{
         ProductEntity product = productRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found. ID: ", externalId));
 
-        if (!product.isActive()) {
+        if (product.isActive()) {
             throw new BusinessRuleException("Product is already active.");
         }
 
@@ -180,6 +180,7 @@ public class ProductService implements IProductService{
     }
 
     //SEARCH WITH FILTERS
+    @Transactional
     @Override
     public List<ProductResponseDTO> search(String name, UUID supplierId, UUID categoryId, UUID brandId){
         Specification<ProductEntity> specification = Specification
@@ -196,6 +197,7 @@ public class ProductService implements IProductService{
     }
 
     //LIST ALL INACTIVES
+    @Transactional
     @Override
     public List<ProductResponseDTO> getInactive(String name, UUID supplierId, UUID categoryId, UUID brandId) {
 
@@ -214,11 +216,27 @@ public class ProductService implements IProductService{
     }
 
     //GET BY ID
+    @Transactional
     @Override
     public ProductResponseDTO getById(UUID externalId) {
         ProductEntity product = productRepository
                 .findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found. ID: ", externalId));
+        return productMapper.toResponse(product);
+    }
+
+    //GET BY ID (INACTIVE, SOLO GESTION)
+    @Transactional
+    @Override
+    public ProductResponseDTO getInactiveByExternalId(UUID externalId) {
+        ProductEntity product = productRepository
+                .findByExternalId(externalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found. ID: ", externalId));
+
+        if (product.isActive()) {
+            throw new BusinessRuleException("Product is active. Use the active product endpoint.");
+        }
+
         return productMapper.toResponse(product);
     }
 

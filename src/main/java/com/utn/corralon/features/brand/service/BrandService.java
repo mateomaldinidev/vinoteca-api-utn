@@ -7,6 +7,7 @@ import com.utn.corralon.features.brand.dto.BrandResponseDTO;
 import com.utn.corralon.features.brand.entity.BrandEntity;
 import com.utn.corralon.features.brand.mapper.BrandMapper;
 import com.utn.corralon.features.brand.repository.BrandRepository;
+import com.utn.corralon.features.product.service.ProductCascadeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class BrandService implements IBrandService {
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
+    private final ProductCascadeService productCascadeService;
 
     @Override
     @Transactional
@@ -70,8 +72,20 @@ public class BrandService implements IBrandService {
     public void delete(UUID externalId) {
         BrandEntity entity = brandRepository.findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Brand not found with ID: ", externalId));
+
+        // Primero se desactivan los productos relacionados y todas sus variantes.
+        productCascadeService.deactivateByBrand(externalId);
+
         entity.setActive(false);
         brandRepository.save(entity);
+    }
+
+    @Override
+    public long countAssociatedProducts(UUID externalId) {
+        brandRepository.findByExternalIdAndActiveTrue(externalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Brand not found with ID: ", externalId));
+
+        return productCascadeService.countByBrand(externalId);
     }
 
     @Override

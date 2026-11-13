@@ -1,5 +1,6 @@
 package com.utn.corralon.features.product.entity;
 
+import com.utn.corralon.features.productImage.entity.ProductImageEntity;
 import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
 import com.utn.corralon.features.supplier.entity.SupplierEntity;
 import com.utn.corralon.features.category.entity.CategoryEntity;
@@ -39,6 +40,9 @@ public class ProductEntity {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ProductVariantEntity> productVariants;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImageEntity> productImages;
 
     @ManyToOne()
     @JoinColumn(name = "supplierId", nullable = false)

@@ -2,6 +2,7 @@ package com.utn.corralon.features.cart.service;
 
 import com.utn.corralon.features.cart.dto.CartRequestDTO;
 import com.utn.corralon.features.cart.dto.CartResponseDTO;
+import com.utn.corralon.features.cart.dto.CheckoutResultDTO;
 import com.utn.corralon.features.cart.entity.CartEntity;
 import com.utn.corralon.features.cart_item.dto.CartItemQuantityUpdateDTO;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
@@ -11,15 +12,32 @@ import java.util.UUID;
 
 public interface ICartService {
 
-    CartResponseDTO createOrUpdateCart(CartRequestDTO cartRequest);
+    CartResponseDTO createOrUpdateCart(String username, CartRequestDTO cartRequest);
 
-    CartResponseDTO updateCartItemQuantity(UUID userExternalId, UUID productVariantId, CartItemQuantityUpdateDTO updateDTO);
+    CartResponseDTO updateCartItemQuantity(
+            String username,
+            UUID productVariantId,
+            CartItemQuantityUpdateDTO updateDTO
+    );
 
-    CartResponseDTO getCartByUserId(UUID userExternalId);
+    CartResponseDTO removeCartItem(String username, UUID productVariantId);
 
-    void clearCart(UUID userExternalId);
+    CartResponseDTO getCart(String username);
 
-    OrderResponseDTO checkout(UUID userId, UUID addressId, DeliveryType deliveryType);
+    void clearCart(String username);
 
-    CartEntity getCartEntityByUserId(UUID userExternalId);
+    OrderResponseDTO checkout(
+            String username,
+            UUID addressId,
+            DeliveryType deliveryType
+    );
+
+    CheckoutResultDTO checkout(
+            String username,
+            UUID addressId,
+            DeliveryType deliveryType,
+            String idempotencyKey
+    );
+
+    CartEntity getCartEntity(String username);
 }

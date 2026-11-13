@@ -11,16 +11,17 @@ import com.utn.corralon.features.productVariant.mapper.ProductVariantMapper;
 import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
 import com.utn.corralon.features.productVariant.specification.ProductVariantSpecification;
 import com.utn.corralon.features.stockMovement.dto.StockMovementRequestDTO;
-import com.utn.corralon.features.stockMovement.entity.StockMovementEntity;
-import com.utn.corralon.features.stockMovement.enums.StockMovementType;
-import com.utn.corralon.features.stockMovement.repository.StockMovementRepository;
+import com.utn.corralon.features.stockMovement.service.IStockService;
+import com.utn.corralon.features.user.entity.UserEntity;
+import com.utn.corralon.features.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +31,8 @@ public class ProductVariantService implements IProductVariantService {
 
     private final ProductVariantRepository productVariantRepository;
     private final ProductRepository productRepository;
-    private final StockMovementRepository stockMovementRepository;
+    private final UserRepository userRepository;
+    private final IStockService stockService;
 
     private final ProductVariantMapper productVariantMapper;
 
@@ -38,6 +40,17 @@ public class ProductVariantService implements IProductVariantService {
     @Transactional
     @Override
     public ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO) {
+        String username = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            username = authentication.getName();
+        }
+        return create(productVariantRequestDTO, username);
+    }
+
+    @Transactional
+    @Override
+    public ProductVariantResponseDTO create(ProductVariantRequestDTO productVariantRequestDTO, String username) {
         ProductEntity product = productRepository.findByExternalId(productVariantRequestDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found. ID: ", productVariantRequestDTO.getProductId()));
 
@@ -50,8 +63,26 @@ public class ProductVariantService implements IProductVariantService {
 
         validateWholesaleConfig(productVariantRequestDTO);
 
+        Integer initialStock = productVariantRequestDTO.getStock() != null ? productVariantRequestDTO.getStock() : 0;
+        if (initialStock < 0) {
+            throw new BusinessRuleException("Stock cannot be negative");
+        }
+
         ProductVariantEntity variant = productVariantMapper.toEntity(productVariantRequestDTO, product);
-        productVariantRepository.save(variant);
+        // El stock inicial se inicializa en 0 para que sea StockService el unico
+        // responsable de aplicar el incremento de stock y registrar el resultingStock en su movimiento ENTRY.
+        variant.setStock(0);
+        variant = productVariantRepository.save(variant);
+
+        if (initialStock > 0) {
+            variant = stockService.registerEntry(
+                    variant.getExternalId(),
+                    initialStock,
+                    "Stock inicial",
+                    resolveUserId(username)
+            );
+        }
+
         return productVariantMapper.toResponse(variant);
     }
 
@@ -77,7 +108,11 @@ public class ProductVariantService implements IProductVariantService {
 
         validateWholesaleConfig(productVariantRequestDTO);
 
+        // El stock solo se modifica a traves de StockService (entradas, ventas,
+        // devoluciones y ajustes). Una edicion de variante no debe pisarlo.
+        Integer stockBeforeUpdate = variant.getStock();
         productVariantMapper.updateEntity(variant, productVariantRequestDTO, product);
+        variant.setStock(stockBeforeUpdate);
 
         productVariantRepository.save(variant);
         return productVariantMapper.toResponse(variant);
@@ -168,18 +203,12 @@ public class ProductVariantService implements IProductVariantService {
     //solo para entrada de mercaderia
     @Transactional
     @Override
-    public ProductVariantResponseDTO registerEntry(StockMovementRequestDTO dto) {
-        ProductVariantEntity variant = getActiveVariant(dto.getVariantId());
-
-        variant.setStock(variant.getStock() + dto.getQuantity());
-
-        productVariantRepository.save(variant);
-
-        createStockMovement(
-                variant,
+    public ProductVariantResponseDTO registerEntry(StockMovementRequestDTO dto, String username) {
+        ProductVariantEntity variant = stockService.registerEntry(
+                dto.getVariantId(),
                 dto.getQuantity(),
-                StockMovementType.ENTRY,
-                dto.getReason()
+                dto.getReason(),
+                resolveUserId(username)
         );
 
         return productVariantMapper.toResponse(variant);
@@ -188,23 +217,12 @@ public class ProductVariantService implements IProductVariantService {
     //Adjust positive or negative - es para correcciones de stock por si hay un error humano
     @Transactional
     @Override
-    public ProductVariantResponseDTO adjustStock(StockMovementRequestDTO dto) {
-        ProductVariantEntity variant = getActiveVariant(dto.getVariantId());
-
-        int newStock = variant.getStock() + dto.getQuantity();
-
-        if (newStock < 0) {
-            throw new BusinessRuleException("Stock cannot be negative");
-        }
-        variant.setStock(newStock);
-
-        productVariantRepository.save(variant);
-
-        createStockMovement(
-                variant,
+    public ProductVariantResponseDTO adjustStock(StockMovementRequestDTO dto, String username) {
+        ProductVariantEntity variant = stockService.registerAdjustment(
+                dto.getVariantId(),
                 dto.getQuantity(),
-                StockMovementType.ADJUSTMENT,
-                dto.getReason()
+                dto.getReason(),
+                resolveUserId(username)
         );
 
         return productVariantMapper.toResponse(variant);
@@ -226,17 +244,13 @@ public class ProductVariantService implements IProductVariantService {
                 );
     }
 
-    //metodo interno para crear un registro de movimiento de stock
-    private void createStockMovement(ProductVariantEntity variant, Integer quantity, StockMovementType type, String reason) {
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
+    private Long resolveUserId(String username) {
+        if (username == null) {
+            return null;
+        }
+        return userRepository.findByEmail(username)
+                .map(UserEntity::getId)
+                .orElse(null);
     }
 
     private void validateWholesaleConfig(ProductVariantRequestDTO dto) {

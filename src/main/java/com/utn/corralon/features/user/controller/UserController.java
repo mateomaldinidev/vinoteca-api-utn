@@ -1,5 +1,6 @@
 package com.utn.corralon.features.user.controller;
 
+import com.utn.corralon.features.user.dto.UserProfileUpdateDTO;
 import com.utn.corralon.features.user.dto.UserRequestDTO;
 import com.utn.corralon.features.user.dto.UserResponseDTO;
 import com.utn.corralon.features.user.service.IUserService;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +40,32 @@ public class UserController {
     @Operation(summary = "Listar usuarios", description = "Retorna todos los usuarios del sistema")
     public ResponseEntity<List<UserResponseDTO>> getAll() {
         return ResponseEntity.ok(userService.getAll());
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtener usuario autenticado",
+            description = "Retorna los datos del usuario que realizó la petición, identificado a partir del token JWT")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario autenticado encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) {
+        return ResponseEntity.ok(userService.getByEmail(authentication.getName()));
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    @Operation(summary = "Actualizar perfil propio",
+            description = "Actualiza únicamente los datos personales del usuario autenticado. No permite modificar roles, permisos, identificadores ni credenciales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
+    public ResponseEntity<UserResponseDTO> updateMe(
+            Authentication authentication,
+            @RequestBody @Valid UserProfileUpdateDTO dto) {
+        return ResponseEntity.ok(userService.updateProfile(authentication.getName(), dto));
     }
 
     @GetMapping("/{externalId}")
@@ -75,6 +103,22 @@ public class UserController {
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID externo del usuario") @PathVariable UUID externalId) {
         userService.delete(externalId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/inactive")
+    @PreAuthorize("hasAuthority('USER_LIST')")
+    @Operation(summary = "Listar usuarios inactivos")
+    public ResponseEntity<List<UserResponseDTO>> getInactiveUsers() {
+        return ResponseEntity.ok(userService.getInactiveUsers());
+    }
+
+    @PatchMapping("/{externalId}/activate")
+    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @Operation(summary = "Reactivar usuario")
+    public ResponseEntity<Void> activate(
+            @PathVariable UUID externalId) {
+        userService.activate(externalId);
         return ResponseEntity.noContent().build();
     }
 }

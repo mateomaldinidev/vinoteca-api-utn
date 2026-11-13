@@ -28,7 +28,13 @@ public class AddressMapper {
     }
 
     public void updateEntity(AddressEntity entity, AddressRequestDTO dto) {
-        modelMapper.map(dto, entity);
+        entity.setStreet(dto.getStreet());
+        entity.setStreetNumber(dto.getStreetNumber());
+        entity.setFloor(dto.getFloor());
+        entity.setApartmentNumber(dto.getApartmentNumber());
+        entity.setCity(dto.getCity());
+        entity.setZipCode(dto.getZipCode());
+        // The owner (user) is intentionally not updated here.
     }
 
 }

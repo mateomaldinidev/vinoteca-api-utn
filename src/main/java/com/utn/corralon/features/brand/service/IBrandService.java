@@ -12,6 +12,7 @@ public interface IBrandService {
     BrandResponseDTO getByExternalId(UUID externalId);
     BrandResponseDTO update(UUID externalId, BrandRequestDTO dto);
     void delete(UUID externalId);
+    long countAssociatedProducts(UUID externalId);
     void activate(UUID externalId); // Nuevo metodo
     List<BrandResponseDTO> getInactive(); // Nuevo metodo
 }

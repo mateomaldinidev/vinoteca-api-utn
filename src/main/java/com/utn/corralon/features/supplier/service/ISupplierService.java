@@ -12,6 +12,7 @@ public interface ISupplierService {
     SupplierResponseDTO getByExternalId(UUID externalId);
     SupplierResponseDTO update(UUID externalId, SupplierRequestDTO dto);
     void delete(UUID externalId);
+    long countAssociatedProducts(UUID externalId);
     void activate(UUID externalId);
     List<SupplierResponseDTO> getInactive();
 }

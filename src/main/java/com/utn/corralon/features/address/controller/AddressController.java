@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,10 +29,13 @@ public class AddressController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADDRESS_CREATE')")
-    @Operation(summary = "Crear direccion", description = "Crea una nueva direccion")
+    @Operation(summary = "Crear direccion", description = "Crea una nueva direccion para el usuario autenticado")
     @ApiResponse(responseCode = "201", description = "Direccion creada exitosamente")
-    public ResponseEntity<AddressResponseDTO> create(@RequestBody @Valid AddressRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(addressService.create(dto));
+    public ResponseEntity<AddressResponseDTO> create(
+            @RequestBody @Valid AddressRequestDTO dto,
+            Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(addressService.create(dto, authentication.getName()));
     }
 
     @GetMapping
@@ -49,8 +53,9 @@ public class AddressController {
             @ApiResponse(responseCode = "404", description = "Direccion no encontrada")
     })
     public ResponseEntity<AddressResponseDTO> getByExternalId(
-            @Parameter(description = "ID externo de la direccion") @PathVariable UUID externalId) {
-        return ResponseEntity.ok(addressService.getByExternalId(externalId));
+            @Parameter(description = "ID externo de la direccion") @PathVariable UUID externalId,
+            Authentication authentication) {
+        return ResponseEntity.ok(addressService.getByExternalId(externalId, authentication.getName()));
     }
 
     @PutMapping("/{externalId}")
@@ -62,8 +67,9 @@ public class AddressController {
     })
     public ResponseEntity<AddressResponseDTO> update(
             @Parameter(description = "ID externo de la direccion") @PathVariable UUID externalId,
-            @RequestBody @Valid AddressRequestDTO dto) {
-        return ResponseEntity.ok(addressService.update(externalId, dto));
+            @RequestBody @Valid AddressRequestDTO dto,
+            Authentication authentication) {
+        return ResponseEntity.ok(addressService.update(externalId, dto, authentication.getName()));
     }
 
     @DeleteMapping("/{externalId}")
@@ -75,16 +81,19 @@ public class AddressController {
     })
     public ResponseEntity<Void> delete(
             @Parameter(description = "ID externo de la direccion") @PathVariable UUID externalId,
-            @Parameter(description = "ID externo del usuario") @RequestParam UUID userExternalId) {
-        addressService.delete(externalId, userExternalId);
+            @Parameter(description = "ID externo del usuario (opcional, solo por compatibilidad)")
+            @RequestParam(required = false) UUID userExternalId,
+            Authentication authentication) {
+        addressService.delete(externalId, userExternalId, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/user/{userExternalId}")
     @PreAuthorize("hasAuthority('ADDRESS_LIST_BY_USER')")
-    @Operation(summary = "Listar direcciones de usuario", description = "Retorna todas las direcciones de un usuario especifico")
+    @Operation(summary = "Listar direcciones de usuario", description = "Retorna todas las direcciones del usuario autenticado")
     public ResponseEntity<List<AddressResponseDTO>> getAllByUserExternalId(
-            @Parameter(description = "ID externo del usuario") @PathVariable UUID userExternalId) {
-        return ResponseEntity.ok(addressService.getAllByUserExternalId(userExternalId));
+            @Parameter(description = "ID externo del usuario") @PathVariable UUID userExternalId,
+            Authentication authentication) {
+        return ResponseEntity.ok(addressService.getAllByUserExternalId(userExternalId, authentication.getName()));
     }
 }

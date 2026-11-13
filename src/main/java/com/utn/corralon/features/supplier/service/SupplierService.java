@@ -7,6 +7,7 @@ import com.utn.corralon.features.supplier.dto.SupplierResponseDTO;
 import com.utn.corralon.features.supplier.entity.SupplierEntity;
 import com.utn.corralon.features.supplier.mapper.SupplierMapper;
 import com.utn.corralon.features.supplier.repository.SupplierRepository;
+import com.utn.corralon.features.product.service.ProductCascadeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class SupplierService implements ISupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
+    private final ProductCascadeService productCascadeService;
 
     @Override
     @Transactional
@@ -79,8 +81,20 @@ public class SupplierService implements ISupplierService {
     public void delete(UUID externalId) {
         SupplierEntity entity = supplierRepository.findByExternalIdAndActiveTrue(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with ID: ", externalId));
+
+        // Primero se desactivan los productos relacionados y todas sus variantes.
+        productCascadeService.deactivateBySupplier(externalId);
+
         entity.setActive(false);
         supplierRepository.save(entity);
+    }
+
+    @Override
+    public long countAssociatedProducts(UUID externalId) {
+        supplierRepository.findByExternalIdAndActiveTrue(externalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with ID: ", externalId));
+
+        return productCascadeService.countBySupplier(externalId);
     }
 
     @Override

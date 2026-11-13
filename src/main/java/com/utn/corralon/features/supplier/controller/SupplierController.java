@@ -3,6 +3,7 @@ package com.utn.corralon.features.supplier.controller;
 import com.utn.corralon.features.supplier.dto.SupplierRequestDTO;
 import com.utn.corralon.features.supplier.dto.SupplierResponseDTO;
 import com.utn.corralon.features.supplier.service.ISupplierService;
+import com.utn.corralon.features.product.dto.RelatedProductsCountDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -68,7 +69,7 @@ public class SupplierController {
 
     @DeleteMapping("/{externalId}")
     @PreAuthorize("hasAuthority('SUPPLIER_DELETE')")
-    @Operation(summary = "Eliminar proveedor", description = "Eliminacion logica de un proveedor")
+    @Operation(summary = "Eliminar proveedor", description = "Eliminacion logica de un proveedor. Tambien desactiva sus productos y variantes")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Proveedor eliminado"),
             @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
@@ -77,6 +78,18 @@ public class SupplierController {
             @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
         supplierService.delete(externalId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{externalId}/products/count")
+    @PreAuthorize("hasAuthority('SUPPLIER_DELETE')")
+    @Operation(summary = "Contar productos asociados", description = "Retorna la cantidad de productos relacionados con el proveedor")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cantidad de productos asociados"),
+            @ApiResponse(responseCode = "404", description = "Proveedor no encontrado")
+    })
+    public ResponseEntity<RelatedProductsCountDTO> countAssociatedProducts(
+            @Parameter(description = "ID externo del proveedor") @PathVariable UUID externalId) {
+        return ResponseEntity.ok(new RelatedProductsCountDTO(supplierService.countAssociatedProducts(externalId)));
     }
 
     @PatchMapping("/{externalId}/activate")

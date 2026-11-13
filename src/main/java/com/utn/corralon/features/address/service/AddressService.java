@@ -25,12 +25,13 @@ public class AddressService implements IAddressService {
 
     @Override
     @Transactional
-    public AddressResponseDTO create(AddressRequestDTO dto) {
-        AddressEntity entity = addressMapper.toEntity(dto);
-        UserEntity user = userRepository.findByExternalId(dto.getUserExternalId()) // Buscar por externalId
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", dto.getUserExternalId()));
+    public AddressResponseDTO create(AddressRequestDTO dto, String username) {
+        UserEntity authenticatedUser = getAuthenticatedUser(username);
+        assertNoReassignment(dto, authenticatedUser);
 
-        entity.setUser(user);
+        AddressEntity entity = addressMapper.toEntity(dto);
+        entity.setUser(authenticatedUser);
+
         AddressEntity savedEntity = addressRepository.save(entity);
         return addressMapper.toResponse(savedEntity);
     }
@@ -43,26 +44,26 @@ public class AddressService implements IAddressService {
     }
 
     @Override
-    public AddressResponseDTO getByExternalId(UUID externalId) {
-        AddressEntity entity = addressRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with ID: ", externalId));
+    public AddressResponseDTO getByExternalId(UUID externalId, String username) {
+        UserEntity authenticatedUser = getAuthenticatedUser(username);
+        AddressEntity entity = findAddressOrThrow(externalId);
+
+        assertOwnership(entity, authenticatedUser);
+
         return addressMapper.toResponse(entity);
     }
 
     @Override
     @Transactional
-    public AddressResponseDTO update(UUID externalId, AddressRequestDTO dto){
-        AddressEntity entity = addressRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with ID: ", externalId));
+    public AddressResponseDTO update(UUID externalId, AddressRequestDTO dto, String username) {
+        UserEntity authenticatedUser = getAuthenticatedUser(username);
+        AddressEntity entity = findAddressOrThrow(externalId);
 
+        assertOwnership(entity, authenticatedUser);
+        assertNoReassignment(dto, authenticatedUser);
+
+        // El propietario nunca se modifica desde el request.
         addressMapper.updateEntity(entity, dto);
-
-        // Si el usuario asociado a la dirección cambia, buscar y asignar el nuevo usuario
-        if (!entity.getUser().getExternalId().equals(dto.getUserExternalId())) {
-            UserEntity user = userRepository.findByExternalId(dto.getUserExternalId()) // Buscar por externalId
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: ", dto.getUserExternalId()));
-            entity.setUser(user);
-        }
 
         AddressEntity updatedEntity = addressRepository.save(entity);
         return addressMapper.toResponse(updatedEntity);
@@ -70,11 +71,17 @@ public class AddressService implements IAddressService {
 
     @Override
     @Transactional
-    public void delete(UUID externalId, UUID userExternalId) {
-        AddressEntity address = addressRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with ID: ",externalId));
-        if (!address.getUser().getExternalId().equals(userExternalId)) {
-            throw new UnauthorizedException("Address does not belong to user");
+    public void delete(UUID externalId, UUID userExternalId, String username) {
+        UserEntity authenticatedUser = getAuthenticatedUser(username);
+        AddressEntity address = findAddressOrThrow(externalId);
+
+        assertOwnership(address, authenticatedUser);
+
+        // Compatibility: if the client still sends userExternalId, it must
+        // match the authenticated user. It is never used as identity source.
+        if (userExternalId != null
+                && !userExternalId.equals(authenticatedUser.getExternalId())) {
+            throw new UnauthorizedException("User ID does not match authenticated user");
         }
 
         address.setActive(false);
@@ -82,11 +89,40 @@ public class AddressService implements IAddressService {
     }
 
     @Override
-    public List<AddressResponseDTO> getAllByUserExternalId(UUID userExternalId) {
-        // Se asume que getActiveUser() no es necesario aquí si solo se listan direcciones
-        // Si se necesita validar que el usuario esté activo, se podría llamar a getActiveUser(userExternalId)
-        return addressRepository.findAllByUser_ExternalId(userExternalId).stream()
+    public List<AddressResponseDTO> getAllByUserExternalId(UUID userExternalId, String username) {
+        UserEntity authenticatedUser = getAuthenticatedUser(username);
+
+        if (!authenticatedUser.getExternalId().equals(userExternalId)) {
+            throw new UnauthorizedException("Cannot list addresses from another user");
+        }
+
+        return addressRepository.findAllByUser_ExternalId(authenticatedUser.getExternalId()).stream()
                 .map(addressMapper::toResponse)
                 .toList();
+    }
+
+    private UserEntity getAuthenticatedUser(String username) {
+        return userRepository.findByEmail(username)
+                .filter(UserEntity::getActive)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: ", username));
+    }
+
+    private AddressEntity findAddressOrThrow(UUID externalId) {
+        return addressRepository.findByExternalId(externalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with ID: ", externalId));
+    }
+
+    private void assertOwnership(AddressEntity address, UserEntity authenticatedUser) {
+        if (address.getUser() == null
+                || !address.getUser().getExternalId().equals(authenticatedUser.getExternalId())) {
+            throw new UnauthorizedException("Address does not belong to user");
+        }
+    }
+
+    private void assertNoReassignment(AddressRequestDTO dto, UserEntity authenticatedUser) {
+        if (dto.getUserExternalId() != null
+                && !dto.getUserExternalId().equals(authenticatedUser.getExternalId())) {
+            throw new UnauthorizedException("Cannot assign address to another user");
+        }
     }
 }

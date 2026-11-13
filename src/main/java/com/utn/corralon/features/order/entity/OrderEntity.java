@@ -37,12 +37,47 @@ public class OrderEntity {
     @Column(name="createdAt",nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "expiresAt")
+    private LocalDateTime expiresAt;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
+
+    @Column(name = "cancellationReason", length = 50)
+    private String cancellationReason;
+
+    @Column(name = "cancelledAt")
+    private LocalDateTime cancelledAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeliveryType deliveryType;
+
+    // Snapshot de la direccion al momento del checkout (NULL en PICKUP e historicos).
+    @Column(name = "deliveryStreet")
+    private String deliveryStreet;
+
+    @Column(name = "deliveryStreetNumber")
+    private String deliveryStreetNumber;
+
+    @Column(name = "deliveryFloor")
+    private String deliveryFloor;
+
+    @Column(name = "deliveryApartmentNumber")
+    private String deliveryApartmentNumber;
+
+    @Column(name = "deliveryCity")
+    private String deliveryCity;
+
+    @Column(name = "deliveryZipCode")
+    private String deliveryZipCode;
+
+    // Idempotencia del checkout (NULL en pedidos historicos).
+    @Column(name = "idempotencyKey", length = 255)
+    private String idempotencyKey;
+
+    @Column(name = "checkoutRequestHash", length = 128)
+    private String checkoutRequestHash;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItemEntity> items;

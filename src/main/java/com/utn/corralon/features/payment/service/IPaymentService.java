@@ -8,7 +8,15 @@ import java.util.UUID;
 
 public interface IPaymentService {
 
-    PaymentResponseDTO pay(PaymentRequestDTO request);
+    PaymentResponseDTO pay(
+            PaymentRequestDTO request,
+            String username,
+            boolean isAdmin
+    );
 
-    PaymentResponseDTO getByOrderId(UUID orderId);
+    PaymentResponseDTO getByOrderId(
+            UUID orderId,
+            String username,
+            boolean isAdmin
+    );
 }
