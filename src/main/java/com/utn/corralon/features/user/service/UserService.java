@@ -4,6 +4,7 @@ import com.utn.corralon.exception.EmailAlreadyExistsException;
 import com.utn.corralon.exception.ResourceNotFoundException;
 import com.utn.corralon.features.auth.*;
 import com.utn.corralon.features.notifications.service.IEmailService;
+import com.utn.corralon.features.user.dto.UserProfileUpdateDTO;
 import com.utn.corralon.features.user.dto.UserRequestDTO;
 import com.utn.corralon.features.user.dto.UserResponseDTO;
 import com.utn.corralon.features.user.entity.UserEntity;
@@ -171,6 +172,42 @@ public class UserService implements IUserService {
             emailService.sendPasswordChangedEmail(
                     updated.getEmail(),
                     updated.getName());
+        }
+
+        return userMapper.toResponse(updated, credentials);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO updateProfile(String email, UserProfileUpdateDTO dto) {
+        UserEntity entity = userRepository.findByEmail(email)
+                .filter(UserEntity::getActive)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Cannot be updated. User not found with email: ", email)
+                );
+
+        String newEmail = dto.getEmail().trim();
+        boolean emailChanged = !newEmail.equals(entity.getEmail());
+
+        if (emailChanged && userRepository.existsByEmail(newEmail)) {
+            throw new EmailAlreadyExistsException("El email ya está registrado");
+        }
+
+        entity.setName(dto.getName().trim());
+        entity.setLastName(dto.getLastName().trim());
+        entity.setEmail(newEmail);
+
+        UserEntity updated = userRepository.save(entity);
+
+        CredentialsEntity credentials =
+                credentialsRepository.findByUsername(email)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Credentials not found for user: ", email)
+                        );
+
+        if (!newEmail.equals(credentials.getUsername())) {
+            credentials.setUsername(newEmail);
+            credentialsRepository.save(credentials);
         }
 
         return userMapper.toResponse(updated, credentials);

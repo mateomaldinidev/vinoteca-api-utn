@@ -8,13 +8,16 @@ import com.utn.corralon.features.product.entity.ProductEntity;
 import com.utn.corralon.features.productImage.dto.ProductImageResponseDTO;
 import com.utn.corralon.features.productImage.entity.ProductImageEntity;
 import com.utn.corralon.features.productImage.mapper.ProductImageMapper;
+import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
 import com.utn.corralon.features.supplier.entity.SupplierEntity;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Component
@@ -51,7 +54,24 @@ public class ProductMapper {
                 .findFirst()
                 .orElseGet(() -> images.isEmpty() ? null : images.get(0).getUrl()));
 
+        response.setMinPrice(resolveMinPrice(product));
+
         return response;
+    }
+
+    private BigDecimal resolveMinPrice(ProductEntity product) {
+        if (product.getProductVariants() == null) {
+            return null;
+        }
+
+        return product.getProductVariants().stream()
+                .filter(variant -> Boolean.TRUE.equals(variant.getActive()))
+                .filter(variant -> variant.getStock() != null && variant.getStock() > 0)
+                .map(ProductVariantEntity::getPrice)
+                .filter(Objects::nonNull)
+                .filter(price -> price.compareTo(BigDecimal.ZERO) > 0)
+                .min(Comparator.naturalOrder())
+                .orElse(null);
     }
 
     public ProductEntity toEntity(ProductRequestDTO dto,
