@@ -1,5 +1,6 @@
 package com.utn.corralon.features.user.controller;
 
+import com.utn.corralon.features.user.dto.UserProfileUpdateDTO;
 import com.utn.corralon.features.user.dto.UserRequestDTO;
 import com.utn.corralon.features.user.dto.UserResponseDTO;
 import com.utn.corralon.features.user.service.IUserService;
@@ -50,6 +51,21 @@ public class UserController {
     })
     public ResponseEntity<UserResponseDTO> getMe(Authentication authentication) {
         return ResponseEntity.ok(userService.getByEmail(authentication.getName()));
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    @Operation(summary = "Actualizar perfil propio",
+            description = "Actualiza únicamente los datos personales del usuario autenticado. No permite modificar roles, permisos, identificadores ni credenciales")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
+    public ResponseEntity<UserResponseDTO> updateMe(
+            Authentication authentication,
+            @RequestBody @Valid UserProfileUpdateDTO dto) {
+        return ResponseEntity.ok(userService.updateProfile(authentication.getName(), dto));
     }
 
     @GetMapping("/{externalId}")

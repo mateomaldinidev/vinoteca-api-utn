@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StockMovementMapper {
 
-    // Los movimientos se crean desde ProductVariantService
+    // Los movimientos se crean desde StockService.
     // Este mapper es solo para consulta.
     public StockMovementResponseDTO toResponse(StockMovementEntity entity) {
         return new StockMovementResponseDTO(

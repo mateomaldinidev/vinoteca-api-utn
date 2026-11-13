@@ -16,6 +16,14 @@ public interface IOrderService {
              DeliveryType deliveryType  // null = retiro en sucursal
     );
 
+    OrderResponseDTO createFromCart(
+            CartEntity cart,
+            UUID addressId,
+            DeliveryType deliveryType,
+            String idempotencyKey,
+            String checkoutRequestHash
+    );
+
     List<OrderAdminResponseDTO> getAll();
 
     OrderResponseDTO getByExternalId(UUID externalId, String username);

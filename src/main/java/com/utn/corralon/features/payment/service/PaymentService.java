@@ -6,21 +6,19 @@ import com.utn.corralon.exception.UnauthorizedException;
 import com.utn.corralon.features.notifications.service.IEmailService;
 import com.utn.corralon.features.order.dto.OrderResponseDTO;
 import com.utn.corralon.features.order.entity.OrderEntity;
+import com.utn.corralon.features.order.enums.CancellationReason;
 import com.utn.corralon.features.order.enums.OrderStatus;
 import com.utn.corralon.features.order.mapper.OrderMapper;
 import com.utn.corralon.features.order.repository.OrderRepository;
-import com.utn.corralon.features.orderItem.entity.OrderItemEntity;
+import com.utn.corralon.features.order.service.IOrderLifecycleService;
 import com.utn.corralon.features.payment.dto.PaymentRequestDTO;
 import com.utn.corralon.features.payment.dto.PaymentResponseDTO;
 import com.utn.corralon.features.payment.entity.PaymentEntity;
 import com.utn.corralon.features.payment.entity.PaymentStatus;
 import com.utn.corralon.features.payment.mapper.PaymentMapper;
 import com.utn.corralon.features.payment.repository.PaymentRepository;
-import com.utn.corralon.features.productVariant.entity.ProductVariantEntity;
-import com.utn.corralon.features.productVariant.repository.ProductVariantRepository;
-import com.utn.corralon.features.stockMovement.entity.StockMovementEntity;
-import com.utn.corralon.features.stockMovement.enums.StockMovementType;
-import com.utn.corralon.features.stockMovement.repository.StockMovementRepository;
+import com.utn.corralon.features.user.entity.UserEntity;
+import com.utn.corralon.features.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,11 +33,11 @@ public class PaymentService implements IPaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
-    private final ProductVariantRepository productVariantRepository;
+    private final UserRepository userRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
     private final IEmailService emailService;
-    private final StockMovementRepository stockMovementRepository;
+    private final IOrderLifecycleService orderLifecycleService;
 
     @Override
     public PaymentResponseDTO pay(
@@ -47,7 +45,9 @@ public class PaymentService implements IPaymentService {
             String username,
             boolean isAdmin) {
 
-        OrderEntity order = orderRepository.findByExternalId(request.getOrderId())
+        // El lock serializa pago, cancelacion manual y vencimiento. La
+        // revalidacion ocurre despues de obtenerlo.
+        OrderEntity order = orderRepository.findByExternalIdForUpdate(request.getOrderId())
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Order not found with ID: ",
@@ -62,6 +62,12 @@ public class PaymentService implements IPaymentService {
         // Verificar que la orden esté pendiente de pago
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BusinessRuleException("Order is not pending payment");
+        }
+
+        // Un pedido vencido no debe aceptar pagos. Se deja que el scheduler
+        // lo cancele para no cancelar dentro de una transaccion que falla.
+        if (isExpired(order, LocalDateTime.now())) {
+            throw new BusinessRuleException("Order has expired");
         }
 
         // Crear payment en estado PENDING
@@ -99,68 +105,39 @@ public class PaymentService implements IPaymentService {
             return paymentMapper.toDTO(payment);
         }
 
-        // CASO REJECTED: restaurar stock y cancelar orden
+        // CASO REJECTED: la cancelacion (motivo + restauracion de stock)
+        // queda centralizada en OrderLifecycleService y dentro de esta misma
+        // transaccion.
         payment.setPaymentStatus(PaymentStatus.REJECTED);
-        order.setStatus(OrderStatus.CANCELLED);
 
-        restoreStock(order);
-
-        orderRepository.save(order);
-        paymentRepository.save(payment);
-
-        OrderResponseDTO orderDTO = orderMapper.toResponseDTO(order);
-
-        emailService.sendOrderCancelledEmail(
-                order.getUser().getEmail(),
-                order.getUser().getName(),
-                orderDTO,
-                "Payment was rejected"
+        orderLifecycleService.cancelLockedOrder(
+                order,
+                CancellationReason.PAYMENT_REJECTED,
+                resolveUserId(username)
         );
+
+        paymentRepository.save(payment);
 
         return paymentMapper.toDTO(payment);
     }
 
-    // STOCK ROLLBACK
-    private void restoreStock(OrderEntity order) {
-
-        for (OrderItemEntity item : order.getItems()) {
-
-            ProductVariantEntity variant = item.getProductVariant();
-
-            variant.setStock(
-                    variant.getStock() + item.getQuantity()
-            );
-
-            productVariantRepository.save(variant);
-
-            createStockMovement(
-                    variant,
-                    item.getQuantity(),
-                    StockMovementType.CANCELLATION,
-                    "Stock restored by payment rejection"
-            );
-        }
+    private boolean isExpired(OrderEntity order, LocalDateTime referenceTime) {
+        return order.getExpiresAt() != null
+                && !referenceTime.isBefore(order.getExpiresAt());
     }
 
-    private void createStockMovement(
-            ProductVariantEntity variant,
-            Integer quantity,
-            StockMovementType type,
-            String reason) {
-
-        StockMovementEntity movement = StockMovementEntity.builder()
-                .movementDate(LocalDateTime.now())
-                .quantity(quantity)
-                .type(type)
-                .reason(reason)
-                .variant(variant)
-                .build();
-
-        stockMovementRepository.save(movement);
+    private Long resolveUserId(String username) {
+        if (username == null) {
+            return null;
+        }
+        return userRepository.findByEmail(username)
+                .map(UserEntity::getId)
+                .orElse(null);
     }
 
     // SIMULACIÓN TARJETA
-    private PaymentStatus simulateCard(PaymentRequestDTO request) {
+    // Package-private para poder fijar el resultado en los tests.
+    PaymentStatus simulateCard(PaymentRequestDTO request) {
 
         return Math.random() > 0.3
                 ? PaymentStatus.APPROVED
